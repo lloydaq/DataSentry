@@ -1,6 +1,8 @@
 """Application setup: routes, error handling, security headers and the static frontend."""
 
 import logging
+import os
+import re
 import threading
 from pathlib import Path
 
@@ -26,11 +28,30 @@ _SECURITY_HEADERS = {
     "Referrer-Policy": "no-referrer",
     "Cross-Origin-Opener-Policy": "same-origin",
 }
-_CSP = (
-    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
-    "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; "
-    "frame-ancestors 'none'"
-)
+_LOOPBACK_ORIGIN = re.compile(r"http://(localhost|127\.0\.0\.1):\d{1,5}")
+
+
+def build_csp(dev_live_origin: str | None) -> str:
+    """The page CSP. ``dev_live_origin`` (from DATASENTRY_DEV_LIVE_ORIGIN, unset in normal use)
+    lets the local Impeccable live-mode helper load: it must be a loopback http origin, and it
+    also permits inline styles, which live-mode variant previews use."""
+    script = connect = ""
+    style = "'self'"
+    if dev_live_origin:
+        if not _LOOPBACK_ORIGIN.fullmatch(dev_live_origin):
+            raise RuntimeError(
+                "DATASENTRY_DEV_LIVE_ORIGIN must look like http://localhost:8400 or http://127.0.0.1:8400."
+            )
+        script = connect = f" {dev_live_origin}"
+        style = "'self' 'unsafe-inline'"
+    return (
+        f"default-src 'self'; script-src 'self'{script}; style-src {style}; img-src 'self' data:; "
+        f"connect-src 'self'{connect}; object-src 'none'; base-uri 'none'; form-action 'none'; "
+        "frame-ancestors 'none'"
+    )
+
+
+_CSP = build_csp(os.environ.get("DATASENTRY_DEV_LIVE_ORIGIN", "").strip() or None)
 _DOCS_PATHS = ("/docs", "/redoc", "/openapi.json")  # Swagger UI loads its assets from a CDN
 
 

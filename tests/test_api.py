@@ -173,6 +173,21 @@ def test_security_headers_and_csp(client):
         assert "script-src 'self'" in headers["content-security-policy"]
 
 
+def test_csp_dev_live_allowance_is_opt_in_and_loopback_only():
+    from app.main import build_csp
+
+    default = build_csp(None)
+    assert "script-src 'self';" in default and "connect-src 'self';" in default
+    assert "style-src 'self';" in default and "unsafe-inline" not in default
+    dev = build_csp("http://localhost:8400")
+    assert "script-src 'self' http://localhost:8400;" in dev
+    assert "connect-src 'self' http://localhost:8400;" in dev
+    assert "style-src 'self' 'unsafe-inline';" in dev
+    for bad in ("https://evil.example", "http://localhost:8400 'unsafe-eval'", "*", "http://10.0.0.5:8400"):
+        with pytest.raises(RuntimeError):
+            build_csp(bad)
+
+
 def test_frontend_and_samples_are_served(client):
     assert "DataSentry" in client.get("/").text
     assert client.get("/app.js").status_code == 200

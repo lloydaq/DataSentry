@@ -117,9 +117,9 @@ border-bottom:1px solid var(--line)}h3{font-size:15px;margin:0 0 6px}
 .card b{display:block;font-size:20px}table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 th{background:var(--soft);font-weight:600}td.num{text-align:right;font-variant-numeric:tabular-nums}
-.finding{border:1px solid var(--line);border-left:4px solid var(--info);border-radius:6px;
-padding:12px 14px;margin:0 0 10px}.finding.high{border-left-color:var(--high)}
-.finding.medium{border-left-color:var(--medium)}.finding.low{border-left-color:var(--low)}
+.finding{--sev:var(--line);border:1px solid color-mix(in srgb,var(--sev) 22%,var(--line));border-radius:6px;
+padding:12px 14px;margin:0 0 10px}.finding.high{--sev:var(--high)}
+.finding.medium{--sev:var(--medium)}.finding.low{--sev:var(--low)}
 .tag{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;
 padding:1px 7px;border-radius:999px;border:1px solid var(--line);margin-right:4px;color:var(--muted)}
 .tag.high{color:var(--high)}.tag.medium{color:var(--medium)}.tag.low{color:var(--low)}
