@@ -38,11 +38,17 @@ function h(tag, props, ...children) {
     else if (key.startsWith("on")) el.addEventListener(key.slice(2).toLowerCase(), value);
     else el.setAttribute(key, value === true ? "" : String(value));
   }
+  return put(el, ...children);
+}
+
+// Appends children like h() does: nested arrays are flattened, null/undefined/false are skipped
+// (plain Element.append would insert them as the text "null"), and strings become text nodes.
+function put(parent, ...children) {
   for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;
-    el.append(child instanceof Node ? child : String(child)); // strings become text nodes
+    parent.append(child instanceof Node ? child : String(child));
   }
-  return el;
+  return parent;
 }
 
 function clear(el) {
@@ -185,7 +191,7 @@ function setUploadBusy(busy, text) {
 
 function showUploadError(err) {
   const box = clear($("upload-error"));
-  box.append(h("span", { class: "alert-title", text: "This file could not be analyzed" }), err.message);
+  put(box, h("span", { class: "alert-title", text: "This file could not be analyzed" }), err.message);
   box.hidden = false;
 }
 
@@ -330,7 +336,7 @@ function renderFileBar(r) {
   const failed = r.stages.filter((s) => s.status !== "completed");
   banner.hidden = r.status === "complete";
   if (!banner.hidden) {
-    clear(banner).append(
+    put(clear(banner),
       h("span", { class: "alert-title", text: "Partial analysis" }),
       `These stages did not complete: ${failed.map((s) => `${s.name} (${s.status})`).join(", ")}. ` +
       "Results from them are missing; the rest of the report is still valid.");
@@ -345,12 +351,12 @@ function renderSummary(r) {
   $("summary-target").textContent = r.settings.target_column
     ? `Target: ${r.settings.target_column}` : "No target selected";
   $("summary-headline").textContent = s.headline;
-  clear($("severity-counts")).append(
+  put(clear($("severity-counts")),
     ...s.severity_counts.map((c) =>
       h("span", { class: `pill dot ${c.count ? `sev-${c.severity}` : "is-zero"}` }, `${c.count} ${c.severity}`)));
-  clear($("not-evaluated")).append(...s.not_evaluated.map((n) => h("li", { text: n })));
+  put(clear($("not-evaluated")), ...s.not_evaluated.map((n) => h("li", { text: n })));
   $("score-policy").textContent = s.score_policy;
-  clear($("category-grid")).append(...s.categories.map((c) =>
+  put(clear($("category-grid")), ...s.categories.map((c) =>
     h("button", {
       type: "button",
       class: "category-cell",
@@ -398,13 +404,13 @@ function renderOverview(r) {
       h("div", { class: "type-legend" }, present.map((t) =>
         h("span", {}, h("span", { class: `swatch t-${t.inferred_type}` }), `${t.inferred_type} ${t.n_columns}`)))));
   }
-  clear($("overview-cards")).append(...cards);
+  put(clear($("overview-cards")), ...cards);
 }
 
 // --- Findings ------------------------------------------------------------------------------
 
 function fillSelect(select, allLabel, values, current) {
-  clear(select).append(h("option", { value: "", text: allLabel }),
+  put(clear(select), h("option", { value: "", text: allLabel }),
     ...values.map((v) => h("option", { value: v, text: label(v) })));
   select.value = values.includes(current) ? current : "";
 }
@@ -434,14 +440,14 @@ function renderFindings() {
   }
   const list = clear($("findings-list"));
   if (!r.findings.length) {
-    list.append(emptyState("No findings. The checks that ran found nothing to report; see the summary for checks that did not run."));
+    put(list, emptyState("No findings. The checks that ran found nothing to report; see the summary for checks that did not run."));
     return;
   }
   if (!items.length) {
-    list.append(emptyState("No findings match these filters."));
+    put(list, emptyState("No findings match these filters."));
     return;
   }
-  items.forEach((f, i) => list.append(findingCard(f, `finding-${i}`)));
+  items.forEach((f, i) => put(list, findingCard(f, `finding-${i}`)));
 }
 
 function columnChip(name) {
@@ -498,7 +504,7 @@ function chevron() {
   path.setAttribute("fill", "none");
   path.setAttribute("stroke", "currentColor");
   path.setAttribute("stroke-width", "1.6");
-  svg.append(path);
+  put(svg, path);
   return svg;
 }
 
@@ -523,7 +529,7 @@ function renderColumns() {
   const cols = state.result.columns;
   const tbody = clear($("columns-table").tBodies[0]);
   if (!cols) {
-    tbody.append(h("tr", {}, h("td", { colspan: "5", text: "Column profiling did not complete." })));
+    put(tbody, h("tr", {}, h("td", { colspan: "5", text: "Column profiling did not complete." })));
     clear($("column-detail"));
     return;
   }
@@ -543,9 +549,9 @@ function renderColumns() {
     h("td", { class: "num", text: c.n_missing ? fmtPct(c.missing_fraction) : "0" }),
     h("td", { class: "num", text: fmtInt(c.n_unique) }),
     h("td", {}, columnFlags(c).map((flag) => pill(flag, "pill-outline"))));
-    tbody.append(row);
+    put(tbody, row);
   }
-  if (!shown.length) tbody.append(h("tr", {}, h("td", { colspan: "5", text: "No columns match." })));
+  if (!shown.length) put(tbody, h("tr", {}, h("td", { colspan: "5", text: "No columns match." })));
   const selected = cols.find((c) => c.name === state.selectedColumn) || shown[0] || cols[0];
   renderColumnDetail(selected);
 }
@@ -579,14 +585,14 @@ function rangePlot(n) {
   start.style.left = "0";
   const end = h("span", { class: "label end", text: fmtNum(n.max) });
   end.style.left = "100%";
-  plot.append(h("div", { class: "track" }), box, median, start, end);
+  put(plot, h("div", { class: "track" }), box, median, start, end);
   return plot;
 }
 
 function renderColumnDetail(c) {
   const panel = clear($("column-detail"));
   if (!c) return;
-  panel.append(
+  put(panel,
     h("h2", { text: c.name }),
     h("p", { class: "small muted", text: `Column ${c.position + 1} · ${c.inferred_type} · pandas dtype ${c.pandas_dtype}` }),
     h("div", { class: "kv-grid" },
@@ -598,7 +604,7 @@ function renderColumnDetail(c) {
   const related = state.result.findings.filter((f) => f.columns.includes(c.name));
   if (c.numeric) {
     const n = c.numeric;
-    panel.append(h("div", { class: "section-label", text: "Distribution" }), rangePlot(n),
+    put(panel, h("div", { class: "section-label", text: "Distribution" }), rangePlot(n),
       h("div", { class: "kv-grid" },
         kv("Min", fmtNum(n.min)), kv("5th pct", fmtNum(n.p05)), kv("Q1", fmtNum(n.q1)),
         kv("Median", fmtNum(n.median)), kv("Q3", fmtNum(n.q3)), kv("95th pct", fmtNum(n.p95)),
@@ -613,7 +619,7 @@ function renderColumnDetail(c) {
   }
   if (c.categorical) {
     const s = c.categorical;
-    panel.append(h("div", { class: "section-label", text: `Most frequent values${s.top_values_truncated ? ` (top ${s.top_values.length} of ${fmtInt(s.n_unique)})` : ""}` }),
+    put(panel, h("div", { class: "section-label", text: `Most frequent values${s.top_values_truncated ? ` (top ${s.top_values.length} of ${fmtInt(s.n_unique)})` : ""}` }),
       h("div", { class: "bar-list" }, s.top_values.map((v) =>
         barRow(v.value === "" ? "(empty string)" : v.value, v.fraction, `${fmtInt(v.count)} · ${fmtPct(v.fraction)}`))),
       h("div", { class: "kv-grid" },
@@ -624,18 +630,18 @@ function renderColumnDetail(c) {
         kv("Mean length", fmtNum(s.mean_length)),
         kv("Max length", fmtInt(s.max_length))));
     if (s.variant_groups.length) {
-      panel.append(h("div", { class: "section-label", text: "Values that differ only in case or spacing" }),
+      put(panel, h("div", { class: "section-label", text: "Values that differ only in case or spacing" }),
         ...s.variant_groups.map((g) => h("div", {},
           g.variants.map((v) => h("span", { class: "chip", title: JSON.stringify(v), text: JSON.stringify(v) })),
           h("span", { class: "small muted", text: `${fmtInt(g.n_rows)} rows` }))));
     }
   }
   if (c.datetime) {
-    panel.append(h("div", { class: "kv-grid" },
+    put(panel, h("div", { class: "kv-grid" },
       kv("Earliest", c.datetime.min || "—"), kv("Latest", c.datetime.max || "—"),
       kv("Unparseable", fmtInt(c.datetime.n_unparseable))));
   }
-  panel.append(h("div", { class: "section-label", text: `Findings for this column (${related.length})` }),
+  put(panel, h("div", { class: "section-label", text: `Findings for this column (${related.length})` }),
     related.length
       ? h("div", { class: "findings-list" }, related.map((f, i) => findingCard(f, `col-finding-${i}`)))
       : h("p", { class: "small muted", text: "None." }));
@@ -646,7 +652,7 @@ function renderColumnDetail(c) {
 function renderMissing(r) {
   const panel = clear($("panel-missing"));
   const o = r.overview;
-  panel.append(h("div", { class: "two-col" },
+  put(panel, h("div", { class: "two-col" },
     h("div", { class: "card" },
       h("h2", { class: "card-title", text: "Rows" }),
       h("div", { class: "big-number", text: fmtInt(o.n_rows_with_missing) }),
@@ -657,7 +663,7 @@ function renderMissing(r) {
       h("p", { class: "small muted", text: `${fmtInt(o.n_missing_cells)} of ${fmtInt(o.n_cells)} cells are missing` }))));
   if (!r.columns) return;
   const cols = r.columns.filter((c) => c.n_missing > 0).sort((a, b) => b.missing_fraction - a.missing_fraction || a.position - b.position);
-  panel.append(h("div", { class: "card", style: null },
+  put(panel, h("div", { class: "card", style: null },
     h("h2", { class: "card-title", text: "Missing values by column" }),
     cols.length
       ? h("div", { class: "bar-list" }, cols.map((c) =>
@@ -672,9 +678,9 @@ function renderDuplicates(r) {
   const d = r.duplicates;
   const dupCard = h("div", { class: "card" }, h("h2", { class: "card-title", text: "Exact duplicate rows" }));
   if (!d) {
-    dupCard.append(h("p", { class: "muted", text: "Duplicate detection did not complete." }));
+    put(dupCard, h("p", { class: "muted", text: "Duplicate detection did not complete." }));
   } else {
-    dupCard.append(
+    put(dupCard,
       h("div", { class: "big-number", text: fmtInt(d.n_duplicate_rows) }),
       h("p", { class: "small muted", text: `${fmtPct(d.duplicate_fraction)} of rows · ${fmtInt(d.n_duplicate_groups)} distinct repeated records` }),
       d.example_row_indices.length
@@ -686,9 +692,9 @@ function renderDuplicates(r) {
   const red = r.redundancy;
   const redCard = h("div", { class: "card" }, h("h2", { class: "card-title", text: "Redundant columns" }));
   if (!red) {
-    redCard.append(h("p", { class: "muted", text: "Redundancy screening did not run." }));
+    put(redCard, h("p", { class: "muted", text: "Redundancy screening did not run." }));
   } else {
-    redCard.append(h("div", { class: "section-label", text: "Identical columns" }),
+    put(redCard, h("div", { class: "section-label", text: "Identical columns" }),
       red.duplicate_column_groups.length
         ? h("div", {}, red.duplicate_column_groups.map((g) => h("div", {}, g.map(columnChip))))
         : h("p", { class: "small muted", text: "None." }),
@@ -701,24 +707,24 @@ function renderDuplicates(r) {
             h("td", { class: "num", text: p.pearson_r.toFixed(4) }), h("td", { class: "num", text: fmtInt(p.n_pairs) }))))))
         : h("p", { class: "small muted", text: red.correlation_status === "skipped" ? red.correlation_note : "None." }));
   }
-  panel.append(h("div", { class: "two-col" }, dupCard, redCard));
+  put(panel, h("div", { class: "two-col" }, dupCard, redCard));
 }
 
 // --- Target --------------------------------------------------------------------------------
 
 function renderTarget(r) {
   const select = clear($("target-select"));
-  select.append(h("option", { value: "", text: "No target" }),
+  put(select, h("option", { value: "", text: "No target" }),
     ...(r.columns || []).map((c) => h("option", { value: c.name, text: `${c.name} (${c.inferred_type})` })));
   select.value = r.settings.target_column || "";
   const out = clear($("target-results"));
   const t = r.target;
   if (!r.settings.target_column) {
-    out.append(emptyState("Select a target column to check class balance, label conflicts and leakage signals."));
+    put(out, emptyState("Select a target column to check class balance, label conflicts and leakage signals."));
     return;
   }
   if (!t) {
-    out.append(emptyState("Target analysis did not complete for this column."));
+    put(out, emptyState("Target analysis did not complete for this column."));
     return;
   }
   const cards = [h("div", { class: "card" },
@@ -757,7 +763,7 @@ function renderTarget(r) {
         ? h("div", {}, t.leakage_signals.map((s) => h("p", {}, columnChip(s.column), h("span", { class: "small", text: ` ${s.description}` }))))
         : h("p", { class: "small muted", text: "No feature predicts the target strongly enough to trigger a leakage screen. This does not rule out leakage." })));
   }
-  out.append(h("div", { class: "two-col" }, cards));
+  put(out, h("div", { class: "two-col" }, cards));
 }
 
 // --- ML checks -----------------------------------------------------------------------------
@@ -774,16 +780,16 @@ function renderMl() {
 async function runLabelReview() {
   if (state.busy) return;
   const out = clear($("label-review-results"));
-  out.append(h("p", { class: "small muted", text: "Training cross-validated model…" }));
+  put(out, h("p", { class: "small muted", text: "Training cross-validated model…" }));
   setDashboardBusy(true);
   try {
     const res = await (await post("/api/label-review", baseForm())).json();
     clear(out);
     if (res.status === "unsupported") {
-      out.append(h("div", { class: "alert alert-warn", text: res.reason }));
+      put(out, h("div", { class: "alert alert-warn", text: res.reason }));
       return;
     }
-    out.append(
+    put(out,
       h("div", { class: "kv-grid" },
         kv("Rows used", fmtInt(res.n_rows_used)),
         kv("Out-of-fold accuracy", fmtPct(res.oof_accuracy)),
@@ -798,7 +804,7 @@ async function runLabelReview() {
         ? h("p", { class: "small muted", text: `Excluded: ${res.excluded_features.map((e) => `${e.column} (${e.reason})`).join("; ")}.` })
         : null);
     if (res.candidates.length) {
-      out.append(h("div", { class: "section-label", text: `Rows to review${res.candidates_truncated ? ` (first ${res.candidates.length})` : ""}` }),
+      put(out, h("div", { class: "section-label", text: `Rows to review${res.candidates_truncated ? ` (first ${res.candidates.length})` : ""}` }),
         h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
           h("thead", {}, h("tr", {}, h("th", { class: "num", text: "Row" }), h("th", { text: "Given label" }),
             h("th", { text: "Model prefers" }), h("th", { class: "num", text: "P(given)" }), h("th", { class: "num", text: "P(preferred)" }))),
@@ -807,11 +813,11 @@ async function runLabelReview() {
             h("td", { text: c.predicted_label }), h("td", { class: "num", text: c.given_label_probability.toFixed(3) }),
             h("td", { class: "num", text: c.predicted_label_probability.toFixed(3) })))))));
     } else {
-      out.append(h("p", { class: "small", text: "The model agrees with every label." }));
+      put(out, h("p", { class: "small", text: "The model agrees with every label." }));
     }
-    out.append(h("ul", { class: "small muted" }, res.limitations.map((l) => h("li", { text: l }))));
+    put(out, h("ul", { class: "small muted" }, res.limitations.map((l) => h("li", { text: l }))));
   } catch (err) {
-    clear(out).append(h("div", { class: "alert alert-error", text: err.message }));
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
   } finally {
     setDashboardBusy(false);
   }
@@ -822,10 +828,10 @@ async function runOverlap(testFile) {
   const out = clear($("overlap-results"));
   const problem = validateLocally(testFile);
   if (problem) {
-    out.append(h("div", { class: "alert alert-error", text: problem }));
+    put(out, h("div", { class: "alert alert-error", text: problem }));
     return;
   }
-  out.append(h("p", { class: "small muted", text: `Comparing with ${testFile.name}…` }));
+  put(out, h("p", { class: "small muted", text: `Comparing with ${testFile.name}…` }));
   const form = new FormData();
   form.append("train_file", state.file, state.file.name);
   form.append("test_file", testFile, testFile.name);
@@ -834,7 +840,7 @@ async function runOverlap(testFile) {
   setDashboardBusy(true);
   try {
     const res = await (await post("/api/train-test-overlap", form)).json();
-    clear(out).append(
+    put(clear(out),
       h("p", { class: "small muted", text: `${res.test.filename}: ${fmtInt(res.test.n_rows)} rows, ${res.common_columns.length} shared columns.` }),
       h("div", { class: "kv-grid" },
         kv("Test rows found in train", `${fmtInt(res.n_test_rows_in_train)} (${fmtPct(res.test_rows_in_train_fraction)})`),
@@ -845,7 +851,7 @@ async function runOverlap(testFile) {
         : h("p", { class: "small", text: "No exact overlap found." }),
       h("ul", { class: "small muted" }, res.limitations.map((l) => h("li", { text: l }))));
   } catch (err) {
-    clear(out).append(h("div", { class: "alert alert-error", text: err.message }));
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
   } finally {
     setDashboardBusy(false);
     $("test-file-input").value = "";
@@ -857,7 +863,7 @@ async function runOverlap(testFile) {
 function renderCorrections(r) {
   const root = clear($("corrections-content"));
   if (!r.corrections.length) {
-    root.append(emptyState("No automatic corrections are proposed for this dataset. Missing values are not imputed here: imputation should be fitted on training data inside your modeling pipeline."));
+    put(root, emptyState("No automatic corrections are proposed for this dataset. Missing values are not imputed here: imputation should be fitted on training data inside your modeling pipeline."));
     return;
   }
   const selected = new Map(); // id -> Set of columns (or true)
@@ -905,19 +911,19 @@ function renderCorrections(r) {
     const plan = { approved: approval.checked, target_column: r.settings.target_column, steps };
     setDashboardBusy(true);
     apply.disabled = true;
-    clear(result).append(h("p", { class: "small muted", text: "Applying corrections to a copy…" }));
+    put(clear(result), h("p", { class: "small muted", text: "Applying corrections to a copy…" }));
     try {
       const res = await (await post("/api/corrections/apply", baseForm({ plan: JSON.stringify(plan) }))).json();
       renderCorrectionResult(result, res);
     } catch (err) {
-      clear(result).append(h("div", { class: "alert alert-error", text: err.message }));
+      put(clear(result), h("div", { class: "alert alert-error", text: err.message }));
     } finally {
       setDashboardBusy(false);
       update();
     }
   });
 
-  root.append(
+  put(root,
     h("p", { class: "small muted", text: "Nothing is changed unless you select corrections, confirm, and apply. The original file is never modified; you receive a corrected copy and an audit record." }),
     ...items,
     h("label", { class: "approval", for: "approve-corrections" }, approval,
@@ -929,7 +935,7 @@ function renderCorrectionResult(container, res) {
   const a = res.audit;
   const csvBlob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
   const auditBlob = new Blob([JSON.stringify(a, null, 2)], { type: "application/json" });
-  clear(container).append(h("div", { class: "card", style: null },
+  put(clear(container), h("div", { class: "card", style: null },
     h("h2", { class: "card-title", text: "Corrected copy ready" }),
     h("p", { class: "small", text: `${fmtInt(a.input.n_rows)} → ${fmtInt(a.output.n_rows)} rows, ${fmtInt(a.input.n_columns)} → ${fmtInt(a.output.n_columns)} columns.` }),
     h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
@@ -1012,6 +1018,38 @@ function setupTabs() {
   });
 }
 
+// --- Theme ---------------------------------------------------------------------------------
+
+const THEME_KEY = "datasentry-theme";
+
+function applyTheme(choice) {
+  if (choice === "light" || choice === "dark") document.documentElement.dataset.theme = choice;
+  else delete document.documentElement.dataset.theme;
+  const input = document.querySelector(`.theme-input[value="${choice}"]`);
+  if (input) input.checked = true;
+}
+
+function saveTheme(choice) {
+  try {
+    if (choice === "system") localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, choice);
+  } catch {
+    // Not persisted when storage is unavailable; the choice still applies for this visit.
+  }
+}
+
+function setupThemeSwitch() {
+  applyTheme(document.documentElement.dataset.theme || "system"); // theme.js already applied it
+  // Native radios handle clicks and arrow keys; persist whatever the user picks.
+  document.querySelectorAll(".theme-input").forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      applyTheme(input.value);
+      saveTheme(input.value);
+    });
+  });
+}
+
 // --- Startup -------------------------------------------------------------------------------
 
 function setupUpload() {
@@ -1051,15 +1089,18 @@ async function loadHealth() {
     const body = await response.json();
     state.limits = body.limits;
     $("api-status").textContent = `Local server · v${body.version}`;
+    $("api-status").dataset.state = "ok";
     $("upload-hint").textContent =
       `UTF-8 CSV with a header row · up to ${fmtBytes(body.limits.max_upload_bytes)}, ` +
       `${fmtInt(body.limits.max_rows)} rows and ${fmtInt(body.limits.max_columns)} columns.`;
   } catch {
     $("api-status").textContent = "Server unreachable";
+    $("api-status").dataset.state = "down";
   }
 }
 
 function init() {
+  setupThemeSwitch();
   setupUpload();
   setupTabs();
   $("new-analysis").addEventListener("click", resetToUpload);

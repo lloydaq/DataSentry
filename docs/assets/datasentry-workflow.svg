@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380" role="img" aria-labelledby="title desc">
+  <title id="title">How DataSentry works</title>
+  <desc id="desc">Four stages from left to right: a CSV dataset is validated in memory; profiling and diagnostics run; findings and opt-in ML checks are reported with evidence; the user reviews outputs, downloads JSON or HTML reports, and can apply explicitly approved corrections to a copy.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1222"/>
+      <stop offset="1" stop-color="#121c36"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#7a9cf5"/>
+    </marker>
+    <style>
+      .sans { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace; }
+      .card { fill: #16213f; stroke: #2c3c6b; stroke-width: 1.5; }
+      .card-accent { fill: #16213f; stroke: #5f84ee; stroke-width: 1.5; }
+      .step { fill: #7a9cf5; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
+      .title { fill: #eef2fb; font-size: 21px; font-weight: 700; }
+      .item { fill: #b8c3dc; font-size: 15px; }
+      .note { fill: #8e9bba; font-size: 14px; }
+      .flow { stroke: #7a9cf5; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <rect width="1200" height="380" rx="22" fill="url(#bg)"/>
+  <text x="48" y="58" class="sans" fill="#eef2fb" font-size="24" font-weight="750">From raw CSV to reviewed decisions</text>
+  <text x="48" y="86" class="sans note">Everything runs on your machine. Uploads stay in memory and are never stored.</text>
+
+  <!-- Stage 1 -->
+  <rect x="48" y="118" width="248" height="216" rx="14" class="card"/>
+  <text x="70" y="150" class="sans step">INPUT</text>
+  <text x="70" y="180" class="sans title">CSV dataset</text>
+  <text x="70" y="214" class="sans item">UTF-8 CSV with a header</text>
+  <text x="70" y="240" class="sans item">Size, row and column limits</text>
+  <text x="70" y="266" class="sans item">Header and structure checks</text>
+  <text x="70" y="306" class="mono note">loader</text>
+
+  <!-- Stage 2 -->
+  <rect x="338" y="118" width="248" height="216" rx="14" class="card"/>
+  <text x="360" y="150" class="sans step">PROFILE</text>
+  <text x="360" y="180" class="sans title">Diagnostics</text>
+  <text x="360" y="214" class="sans item">Types, missing values</text>
+  <text x="360" y="240" class="sans item">Duplicates, redundancy</text>
+  <text x="360" y="266" class="sans item">Numeric and category stats</text>
+  <text x="360" y="306" class="mono note">profiler · target</text>
+
+  <!-- Stage 3 -->
+  <rect x="628" y="118" width="248" height="216" rx="14" class="card-accent"/>
+  <text x="650" y="150" class="sans step">EXPLAIN</text>
+  <text x="650" y="180" class="sans title">Findings + ML checks</text>
+  <text x="650" y="214" class="sans item">Evidence for every finding</text>
+  <text x="650" y="240" class="sans item">Leakage screen, label review</text>
+  <text x="650" y="266" class="sans item">Train/test overlap (opt-in)</text>
+  <text x="650" y="306" class="mono note">findings · leakage</text>
+
+  <!-- Stage 4 -->
+  <rect x="918" y="118" width="234" height="216" rx="14" class="card"/>
+  <text x="940" y="150" class="sans step">DECIDE</text>
+  <text x="940" y="180" class="sans title">Review + export</text>
+  <text x="940" y="214" class="sans item">JSON and HTML reports</text>
+  <text x="940" y="240" class="sans item">Approved corrections</text>
+  <text x="940" y="266" class="sans item">applied to a copy + audit</text>
+  <text x="940" y="306" class="mono note">report · corrections</text>
+
+  <path d="M298 226h36" class="flow" marker-end="url(#arrow)"/>
+  <path d="M588 226h36" class="flow" marker-end="url(#arrow)"/>
+  <path d="M878 226h36" class="flow" marker-end="url(#arrow)"/>
+</svg>

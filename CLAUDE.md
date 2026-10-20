@@ -45,8 +45,9 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/label_review.py` | Opt-in cross-validated label review (scikit-learn) |
 | `app/services/corrections.py` | Correction proposals; approved application to a copy with audit trail |
 | `app/services/report.py` | JSON report document and escaped, script-free HTML report |
-| `frontend/` | `index.html`, `style.css`, `app.js`; no build step, no external assets |
+| `frontend/` | `index.html`, `style.css`, `app.js` (UI; DOM appends go through `put()`/`h()`, which skip nulls), `theme.js` (applies the saved theme before paint; key `datasentry-theme`), `kinetic-grid.js` (canvas background); no build step, no external assets |
 | `tests/` | pytest: unit, API integration, security boundaries, determinism (`conftest.py` holds shared helpers) |
+| `docs/` | README artwork (`assets/*.svg`) and real app screenshots (`screenshots/*-light.png`, `*-dark.png`) |
 | `sample_data/` | Synthetic demo CSVs from `scripts/generate_sample_data.py`; planted issues listed in its README |
 | `reports/` | Reserved for report artifacts. Preserve it and its contents; nothing writes here automatically |
 

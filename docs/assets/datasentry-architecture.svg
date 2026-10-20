@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" role="img" aria-labelledby="title desc">
+  <title id="title">DataSentry architecture</title>
+  <desc id="desc">A browser frontend sends multipart uploads over localhost to a FastAPI application. Routes read uploads into memory with size caps and call pure-Python services: loader, profiler, target, leakage, findings, analysis, label review, corrections and report, built on pandas, NumPy, scikit-learn and Pydantic. Responses are JSON results, downloadable JSON or HTML reports, and corrected CSV copies with audit records. There is no database and no external network call, and uploads are never written to disk.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1222"/>
+      <stop offset="1" stop-color="#121c36"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#7a9cf5"/>
+    </marker>
+    <style>
+      .sans { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace; }
+      .panel { fill: #16213f; stroke: #2c3c6b; stroke-width: 1.5; }
+      .panel-accent { fill: #16213f; stroke: #5f84ee; stroke-width: 1.5; }
+      .chip { fill: #1d2a4f; stroke: #34467a; stroke-width: 1; }
+      .label { fill: #7a9cf5; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
+      .head { fill: #eef2fb; font-size: 21px; font-weight: 700; }
+      .file { fill: #dbe3f6; font-size: 15px; }
+      .desc { fill: #9eabc8; font-size: 14px; }
+      .flow { stroke: #7a9cf5; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <rect width="1200" height="640" rx="22" fill="url(#bg)"/>
+  <text x="48" y="58" class="sans" fill="#eef2fb" font-size="24" font-weight="750">Architecture</text>
+  <text x="48" y="86" class="sans desc">One local process: FastAPI serves the API and the static frontend. No database, no external network calls.</text>
+
+  <!-- Browser -->
+  <rect x="48" y="116" width="262" height="318" rx="14" class="panel"/>
+  <text x="70" y="148" class="sans label">BROWSER</text>
+  <text x="70" y="178" class="sans head">Frontend</text>
+  <text x="70" y="212" class="mono file">index.html · style.css</text>
+  <text x="70" y="238" class="mono file">app.js</text>
+  <text x="70" y="264" class="mono file">theme.js</text>
+  <text x="70" y="290" class="mono file">kinetic-grid.js</text>
+  <text x="70" y="330" class="sans desc">Plain HTML/CSS/JS, no build.</text>
+  <text x="70" y="354" class="sans desc">Dataset text rendered via</text>
+  <text x="70" y="376" class="sans desc">textContent only. Strict CSP.</text>
+  <text x="70" y="410" class="sans desc">Light / Dark / System themes</text>
+
+  <!-- FastAPI -->
+  <rect x="356" y="116" width="290" height="318" rx="14" class="panel-accent"/>
+  <text x="378" y="148" class="sans label">FASTAPI</text>
+  <text x="378" y="178" class="sans head">Application</text>
+  <text x="378" y="212" class="mono file">main.py</text>
+  <text x="378" y="234" class="sans desc">security headers, CSP, error</text>
+  <text x="378" y="254" class="sans desc">handlers, static files</text>
+  <text x="378" y="290" class="mono file">api/routes.py</text>
+  <text x="378" y="312" class="sans desc">/api/health, analyze, report,</text>
+  <text x="378" y="332" class="sans desc">label-review, train-test-overlap,</text>
+  <text x="378" y="352" class="sans desc">corrections/apply</text>
+  <text x="378" y="388" class="mono file">api/uploads.py</text>
+  <text x="378" y="410" class="sans desc">size-capped, in-memory multipart</text>
+
+  <!-- Services -->
+  <rect x="692" y="116" width="460" height="318" rx="14" class="panel"/>
+  <text x="714" y="148" class="sans label">APP/SERVICES · NO WEB IMPORTS</text>
+  <text x="714" y="178" class="sans head">Diagnostics engine</text>
+  <g class="mono file">
+    <rect x="714" y="198" width="134" height="40" rx="8" class="chip"/><text x="730" y="224">loader</text>
+    <rect x="858" y="198" width="134" height="40" rx="8" class="chip"/><text x="874" y="224">profiler</text>
+    <rect x="1002" y="198" width="128" height="40" rx="8" class="chip"/><text x="1018" y="224">target</text>
+    <rect x="714" y="248" width="134" height="40" rx="8" class="chip"/><text x="730" y="274">leakage</text>
+    <rect x="858" y="248" width="134" height="40" rx="8" class="chip"/><text x="874" y="274">findings</text>
+    <rect x="1002" y="248" width="128" height="40" rx="8" class="chip"/><text x="1018" y="274">analysis</text>
+    <rect x="714" y="298" width="134" height="40" rx="8" class="chip"/><text x="730" y="324">label_review</text>
+    <rect x="858" y="298" width="134" height="40" rx="8" class="chip"/><text x="874" y="324">corrections</text>
+    <rect x="1002" y="298" width="128" height="40" rx="8" class="chip"/><text x="1018" y="324">report</text>
+  </g>
+  <text x="714" y="374" class="sans desc">Typed contracts: <tspan class="mono" fill="#dbe3f6">models/schemas.py</tspan> (Pydantic)</text>
+  <text x="714" y="404" class="sans desc">Built on pandas · NumPy · scikit-learn (label review)</text>
+
+  <!-- Flows -->
+  <path d="M312 262h40" class="flow" marker-end="url(#arrow)"/>
+  <text x="314" y="248" class="sans desc" font-size="12">HTTP</text>
+  <path d="M648 262h40" class="flow" marker-end="url(#arrow)"/>
+
+  <!-- Outputs -->
+  <path d="M600 436v40" class="flow" marker-end="url(#arrow)"/>
+  <rect x="48" y="484" width="1104" height="100" rx="14" class="panel"/>
+  <text x="70" y="516" class="sans label">RESPONSES · RETURNED TO THE BROWSER, NOTHING STORED ON THE SERVER</text>
+  <text x="70" y="552" class="sans file">AnalysisResult JSON</text>
+  <text x="312" y="552" class="sans file">JSON and HTML report downloads</text>
+  <text x="640" y="552" class="sans file">Corrected CSV copy + audit record</text>
+  <text x="70" y="574" class="sans desc">strict JSON, deterministic ordering</text>
+  <text x="312" y="574" class="sans desc">escaped, script-free HTML</text>
+  <text x="640" y="574" class="sans desc">only after explicit approval</text>
+  <text x="48" y="616" class="sans desc">Uploads are parsed in memory and never written to disk. Errors are fixed templates: no tracebacks, no cell values.</text>
+</svg>
