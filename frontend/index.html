@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DataSentry: dataset diagnostics</title>
+  <meta name="description" content="Local-first dataset diagnostics for machine-learning practitioners.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f5bd3'/%3E%3Cpath d='M9 21V11h5a5 5 0 0 1 0 10z' fill='none' stroke='white' stroke-width='2.4'/%3E%3Ccircle cx='22.5' cy='21' r='2' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="DataSentry home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7"></rect>
+        <path d="M9 21V11h5a5 5 0 0 1 0 10z"></path>
+        <circle cx="22.5" cy="21" r="2"></circle>
+      </svg>
+      <span class="brand-name">DataSentry</span>
+    </a>
+    <span class="topbar-meta" id="api-status">Connecting…</span>
+    <button type="button" class="btn btn-ghost" id="new-analysis" hidden>New analysis</button>
+  </header>
+
+  <main id="main">
+    <!-- Upload ------------------------------------------------------------------------------>
+    <section id="upload-view" class="upload-view" aria-labelledby="hero-title">
+      <div class="hero">
+        <p class="eyebrow">Dataset diagnostics for machine learning</p>
+        <h1 id="hero-title">Find data problems before they reach your model.</h1>
+        <p class="lede">
+          DataSentry profiles a CSV file on your machine and explains what it finds, with the
+          evidence behind every finding, why it matters, and what to check next.
+        </p>
+        <ul class="check-list">
+          <li><strong>Completeness &amp; uniqueness</strong> missing values, duplicate rows, empty columns</li>
+          <li><strong>Column quality</strong> constant, redundant, identifier-like and inconsistent columns</li>
+          <li><strong>Distributions</strong> numeric statistics, IQR outlier candidates, category frequencies</li>
+          <li><strong>Target &amp; leakage</strong> class balance, label conflicts, features that predict the target too well</li>
+        </ul>
+      </div>
+
+      <div class="upload-card">
+        <div id="dropzone" class="dropzone" tabindex="0" role="button"
+             aria-describedby="upload-hint" aria-label="Choose a CSV file to analyze">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path>
+          </svg>
+          <p class="dropzone-title"><strong>Drop a CSV file here</strong> or <span class="link-like">browse</span></p>
+          <p id="upload-hint" class="hint">UTF-8 CSV with a header row.</p>
+          <input type="file" id="file-input" accept=".csv,text/csv" hidden>
+        </div>
+
+        <div id="upload-progress" class="progress-block" hidden>
+          <div class="progress-row">
+            <span id="progress-label">Uploading…</span>
+            <span id="progress-value"></span>
+          </div>
+          <div class="progress-track"><span id="progress-fill" class="progress-fill"></span></div>
+        </div>
+
+        <div id="upload-error" class="alert alert-error" role="alert" hidden></div>
+
+        <div class="samples">
+          <span class="samples-label">Or try a synthetic sample</span>
+          <div class="samples-buttons">
+            <button type="button" class="btn btn-small" data-sample="customer_churn.csv" data-target="churned">Customer churn (classification)</button>
+            <button type="button" class="btn btn-small" data-sample="sensor_energy.csv" data-target="energy_kwh">Sensor energy (regression)</button>
+          </div>
+        </div>
+        <p class="privacy-note">Files are processed in memory by the local server and are never stored.</p>
+      </div>
+    </section>
+
+    <!-- Dashboard --------------------------------------------------------------------------->
+    <section id="dashboard" class="dashboard" hidden aria-labelledby="file-name">
+      <div class="file-bar">
+        <div class="file-id">
+          <h1 id="file-name" class="file-name"></h1>
+          <p id="file-meta" class="file-meta"></p>
+        </div>
+        <div class="file-actions">
+          <label class="checkbox-inline" title="Include frequent category values in downloaded reports">
+            <input type="checkbox" id="include-values"> Include category values
+          </label>
+          <button type="button" class="btn" id="download-json">Download JSON</button>
+          <button type="button" class="btn btn-primary" id="download-html">Download HTML report</button>
+        </div>
+      </div>
+
+      <div id="partial-banner" class="alert alert-warn" role="status" hidden></div>
+      <div id="dashboard-busy" class="busy-bar" hidden><span></span></div>
+
+      <section class="summary-grid" aria-label="Quality summary">
+        <div class="card summary-card">
+          <div class="summary-head">
+            <span id="summary-status" class="status-pill"></span>
+            <span id="summary-target" class="muted small"></span>
+          </div>
+          <p id="summary-headline" class="summary-headline"></p>
+          <div id="severity-counts" class="severity-counts"></div>
+          <ul id="not-evaluated" class="not-evaluated"></ul>
+          <details class="score-policy">
+            <summary>Why there is no single quality score</summary>
+            <p id="score-policy"></p>
+          </details>
+        </div>
+        <div class="card">
+          <h2 class="card-title">Checks by category</h2>
+          <div id="category-grid" class="category-grid"></div>
+        </div>
+      </section>
+
+      <section id="overview-cards" class="stat-grid" aria-label="Dataset overview"></section>
+
+      <div class="tabs" role="tablist" aria-label="Analysis sections">
+        <button type="button" role="tab" id="tab-findings" aria-controls="panel-findings" aria-selected="true">Findings <span class="tab-count" id="count-findings"></span></button>
+        <button type="button" role="tab" id="tab-columns" aria-controls="panel-columns" aria-selected="false" tabindex="-1">Columns <span class="tab-count" id="count-columns"></span></button>
+        <button type="button" role="tab" id="tab-missing" aria-controls="panel-missing" aria-selected="false" tabindex="-1">Missing values</button>
+        <button type="button" role="tab" id="tab-duplicates" aria-controls="panel-duplicates" aria-selected="false" tabindex="-1">Duplicates &amp; redundancy</button>
+        <button type="button" role="tab" id="tab-target" aria-controls="panel-target" aria-selected="false" tabindex="-1">Target</button>
+        <button type="button" role="tab" id="tab-ml" aria-controls="panel-ml" aria-selected="false" tabindex="-1">ML checks</button>
+        <button type="button" role="tab" id="tab-corrections" aria-controls="panel-corrections" aria-selected="false" tabindex="-1">Corrections <span class="tab-count" id="count-corrections"></span></button>
+      </div>
+
+      <section id="panel-findings" class="tab-panel" role="tabpanel" aria-labelledby="tab-findings">
+        <div class="toolbar">
+          <input type="search" id="finding-search" class="input" placeholder="Search findings or columns" aria-label="Search findings">
+          <select id="filter-severity" class="input" aria-label="Filter by severity"></select>
+          <select id="filter-category" class="input" aria-label="Filter by category"></select>
+          <select id="filter-kind" class="input" aria-label="Filter by evidence type"></select>
+          <select id="sort-findings" class="input" aria-label="Sort findings">
+            <option value="severity">Sort: severity</option>
+            <option value="category">Sort: category</option>
+            <option value="column">Sort: column name</option>
+          </select>
+        </div>
+        <p class="legend small muted">
+          <strong>Likely issue</strong>: almost always a problem for modeling ·
+          <strong>Potential issue</strong>: often a problem, depends on context ·
+          <strong>Observation</strong>: a neutral fact worth knowing ·
+          <strong>Inconclusive</strong>: the check could not reach a result
+        </p>
+        <div id="findings-list" class="findings-list"></div>
+      </section>
+
+      <section id="panel-columns" class="tab-panel" role="tabpanel" aria-labelledby="tab-columns" hidden>
+        <div class="toolbar">
+          <input type="search" id="column-search" class="input" placeholder="Search columns" aria-label="Search columns">
+          <select id="filter-type" class="input" aria-label="Filter by type"></select>
+        </div>
+        <div class="columns-layout">
+          <div class="table-wrap">
+            <table class="data-table" id="columns-table">
+              <thead>
+                <tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col" class="num">Missing</th><th scope="col" class="num">Distinct</th><th scope="col">Flags</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <aside id="column-detail" class="card column-detail" aria-live="polite"></aside>
+        </div>
+      </section>
+
+      <section id="panel-missing" class="tab-panel" role="tabpanel" aria-labelledby="tab-missing" hidden></section>
+      <section id="panel-duplicates" class="tab-panel" role="tabpanel" aria-labelledby="tab-duplicates" hidden></section>
+
+      <section id="panel-target" class="tab-panel" role="tabpanel" aria-labelledby="tab-target" hidden>
+        <div class="card target-picker">
+          <label for="target-select" class="field-label">Target column</label>
+          <div class="toolbar">
+            <select id="target-select" class="input"></select>
+            <button type="button" class="btn btn-primary" id="run-target">Run target analysis</button>
+          </div>
+          <p class="small muted">DataSentry never guesses the target from column names. Selecting one adds class-balance, label-conflict and leakage checks.</p>
+        </div>
+        <div id="target-results"></div>
+      </section>
+
+      <section id="panel-ml" class="tab-panel" role="tabpanel" aria-labelledby="tab-ml" hidden>
+        <div class="ml-grid">
+          <div class="card">
+            <h2 class="card-title">Label review</h2>
+            <p class="small">Trains a simple logistic-regression model with 5-fold stratified cross-validation and lists rows where the out-of-fold prediction disagrees with the given label. Preprocessing is fitted inside each training fold.</p>
+            <p class="small muted">Disagreement is a reason to look at a row, not proof that its label is wrong. Labels are never changed.</p>
+            <button type="button" class="btn btn-primary" id="run-label-review">Run label review</button>
+            <p id="label-review-hint" class="small muted"></p>
+            <div id="label-review-results"></div>
+          </div>
+          <div class="card">
+            <h2 class="card-title">Train/test overlap</h2>
+            <p class="small">Treats the current file as the training set and checks a holdout or test file for rows that also appear in training, and for matching features with different labels.</p>
+            <label class="btn" for="test-file-input">Choose test CSV…</label>
+            <input type="file" id="test-file-input" accept=".csv,text/csv" class="visually-hidden">
+            <button type="button" class="btn btn-small" id="sample-holdout">Use sample holdout</button>
+            <div id="overlap-results"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-corrections" class="tab-panel" role="tabpanel" aria-labelledby="tab-corrections" hidden>
+        <div id="corrections-content"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

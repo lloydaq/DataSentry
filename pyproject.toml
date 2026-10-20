@@ -1,0 +1,10 @@
+# Tool configuration only; DataSentry is run from the repository, not installed as a package.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    "error::pandas.errors.PerformanceWarning",
+    # Starlette's TestClient warns about httpx itself; unrelated to DataSentry code.
+    "ignore::DeprecationWarning:fastapi.testclient",
+    "ignore:Using `httpx` with `starlette.testclient`",
+]
