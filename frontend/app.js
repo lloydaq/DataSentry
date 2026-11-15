@@ -394,7 +394,9 @@ function renderSummary(r) {
   $("summary-headline").textContent = s.headline;
   put(clear($("severity-counts")),
     ...s.severity_counts.map((c) =>
-      h("span", { class: `pill dot ${c.count ? `sev-${c.severity}` : "is-zero"}` }, `${c.count} ${c.severity}`)));
+      h("div", { class: "sev-count", "data-sev": c.count ? c.severity : "zero" },
+        h("span", { class: "sev-count-value", text: fmtInt(c.count) }),
+        h("span", { class: "sev-count-label", text: c.severity }))));
   put(clear($("not-evaluated")), ...s.not_evaluated.map((n) => h("li", { text: n })));
   $("score-policy").textContent = s.score_policy;
   put(clear($("category-grid")), ...s.categories.map((c) =>
@@ -1093,7 +1095,7 @@ async function runContractCheck(contractFile) {
     const res = await (await post("/api/contract/check", form)).json();
     put(clear(out), h("div", { class: "card" },
       h("p", { class: "split-verdict" },
-        h("span", { class: `pill ${res.passed ? "pill-outline" : "dot sev-high"}`, text: res.passed ? "Passed" : "Failed" }),
+        h("span", { class: `status-pill ${res.passed ? "st-pass" : "st-issue"}`, text: res.passed ? "Passed" : "Failed" }),
         h("span", { text: res.passed
           ? `The file meets all ${fmtInt(res.n_rules_checked)} contract rules.`
           : `${fmtInt(res.violations.length)} rule(s) broken out of ${fmtInt(res.n_rules_checked)} checked.` })),

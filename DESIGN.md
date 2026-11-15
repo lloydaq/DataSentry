@@ -2,366 +2,369 @@
 name: DataSentry
 description: Local-first dataset diagnostics that show the evidence behind every finding.
 colors:
-  ledger-blue: "#2f5bd3"
-  ledger-blue-deep: "#2549b0"
-  ledger-blue-wash: "#e8eefc"
-  ledger-blue-dark: "#7a9cf5"
-  ledger-blue-deep-dark: "#9bb4f8"
-  ledger-blue-wash-dark: "#1d2843"
-  paper: "#f6f7f9"
-  sheet: "#ffffff"
-  sheet-tint: "#f1f3f6"
-  rule-line: "#dfe3ea"
-  rule-line-strong: "#c9cfd9"
-  ink: "#182031"
-  ink-soft: "#4a5468"
-  ink-faint: "#5f687a"
-  night-paper: "#0f131a"
-  night-sheet: "#161b24"
-  night-sheet-tint: "#1c2330"
-  night-rule-line: "#2a3242"
-  night-rule-line-strong: "#3a4458"
-  night-ink: "#e6e9ef"
-  night-ink-soft: "#b5bdcc"
-  night-ink-faint: "#8b94a7"
-  severity-high: "#b42318"
-  severity-high-wash: "#fdecea"
-  severity-medium: "#a64b00"
-  severity-medium-wash: "#fdf0e3"
-  severity-low: "#1d5bbf"
-  severity-low-wash: "#e7effb"
-  severity-info: "#556074"
-  severity-info-wash: "#eef0f4"
-  status-pass: "#18794e"
-  status-pass-wash: "#e4f4ec"
-  severity-high-dark: "#f97066"
-  severity-medium-dark: "#f5a35c"
-  severity-low-dark: "#84adf5"
-  severity-info-dark: "#a3acbd"
-  status-pass-dark: "#4fc58c"
-  bar-track: "#e6e9ef"
+  dark-azure: "#00638E"
+  azure-deep: "#004A6B"
+  azure-steel: "#8CB9CC"
+  light-azure: "#BFD8E3"
+  paper-white: "#FFFFFF"
+  onyx: "#000000"
+  onyx-secondary: "#141414"
+  charcoal: "#2B2B2B"
+  azure-mist: "#EEF5F8"
+  azure-mist-strong: "#E2EEF3"
+  lifted-onyx: "#1F1F1F"
+  azure-wash: "#DCEBF2"
+  night-azure-wash: "#0D2A38"
+  night-azure-hover: "#0A74A3"
+  hairline: "#E3E6E9"
+  hairline-strong: "#C8CDD2"
+  night-hairline-strong: "#3D3D3D"
+  ink-secondary: "#454A50"
+  ink-tertiary: "#5E646B"
+  night-ink-secondary: "#C9CCD0"
+  night-ink-tertiary: "#9B9FA4"
+  severity-high: "#B42318"
+  severity-high-wash: "#FDECEB"
+  severity-medium: "#9A4A00"
+  severity-medium-wash: "#FCF0E4"
+  severity-low-wash: "#E3EFF5"
+  severity-info-wash: "#F0F2F4"
+  status-pass: "#18794E"
+  status-pass-wash: "#E4F3EA"
+  night-severity-high: "#FF8A80"
+  night-severity-high-wash: "#2C1412"
+  night-severity-medium: "#F2A65A"
+  night-severity-medium-wash: "#2B1D10"
+  night-severity-low-wash: "#0F2430"
+  night-severity-info: "#A8ACB1"
+  night-status-pass: "#5CC995"
+  night-status-pass-wash: "#102A1C"
 typography:
   display:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "clamp(28px, 4vw, 40px)"
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
+    fontFamily: "Inter Display, Inter, -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI Variable Display, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(36px, 5vw, 60px)"
+    fontWeight: 600
+    lineHeight: 1.05
+    letterSpacing: "-0.03em"
   headline:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "22px"
+    fontFamily: "Inter Display, Inter, -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI Variable Display, Segoe UI, system-ui, sans-serif"
+    fontSize: "clamp(24px, 3vw, 32px)"
+    fontWeight: 650
+    lineHeight: 1.15
+    letterSpacing: "-0.025em"
+  numeral:
+    fontFamily: "Inter Display, Inter, -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI Variable Display, Segoe UI, system-ui, sans-serif"
+    fontSize: "28px"
+    fontWeight: 600
+    lineHeight: 1.1
+    letterSpacing: "-0.02em"
+    fontFeature: "tnum"
+  title:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, SF Pro Text, Segoe UI Variable Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "15px"
     fontWeight: 650
     lineHeight: 1.3
     letterSpacing: "-0.01em"
-  title:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "17px"
-    fontWeight: 600
-    lineHeight: 1.4
-  body:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "14px"
-    fontWeight: 400
-    lineHeight: 1.55
-  label:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "12px"
-    fontWeight: 650
-    lineHeight: 1.4
-    letterSpacing: "0.04em"
-  data:
-    fontFamily: "ui-monospace, Cascadia Code, SF Mono, Consolas, monospace"
-    fontSize: "12.5px"
+  lede:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, SF Pro Text, Segoe UI Variable Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "18px"
     fontWeight: 400
     lineHeight: 1.5
+  body:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, SF Pro Text, Segoe UI Variable Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "14.5px"
+    fontWeight: 400
+    lineHeight: 1.55
+    fontFeature: "cv11, ss01"
+  label:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, SF Pro Text, Segoe UI Variable Text, Segoe UI, system-ui, sans-serif"
+    fontSize: "12.5px"
+    fontWeight: 500
+    lineHeight: 1.4
+  mono:
+    fontFamily: "ui-monospace, SF Mono, Cascadia Code, JetBrains Mono, Consolas, monospace"
+    fontSize: "12.5px"
+    fontWeight: 400
 rounded:
-  sm: "6px"
-  md: "10px"
-  lg: "14px"
+  chip: "8px"
+  control: "10px"
+  input: "12px"
+  tile: "12px"
+  list: "16px"
+  card: "18px"
+  section: "24px"
+  feature: "32px"
   pill: "999px"
 spacing:
   xs: "6px"
   sm: "8px"
   md: "12px"
   lg: "16px"
+  card: "22px"
   xl: "24px"
+  2xl: "32px"
+  hero: "56px"
 components:
-  button:
-    backgroundColor: "{colors.sheet}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "0 14px"
-    height: "36px"
-  button-hover:
-    backgroundColor: "{colors.sheet-tint}"
   button-primary:
-    backgroundColor: "{colors.ledger-blue}"
-    textColor: "{colors.sheet}"
-    rounded: "{rounded.sm}"
-    padding: "0 14px"
-    height: "36px"
+    backgroundColor: "{colors.dark-azure}"
+    textColor: "{colors.paper-white}"
+    rounded: "{rounded.control}"
+    padding: "0 16px"
+    height: "38px"
   button-primary-hover:
-    backgroundColor: "{colors.ledger-blue-deep}"
-  button-small:
-    rounded: "{rounded.sm}"
-    padding: "0 10px"
-    height: "30px"
+    backgroundColor: "{colors.azure-deep}"
+  button-secondary:
+    backgroundColor: "{colors.paper-white}"
+    textColor: "{colors.onyx-secondary}"
+    rounded: "{rounded.control}"
+    padding: "0 16px"
+    height: "38px"
+  button-secondary-hover:
+    backgroundColor: "{colors.azure-mist-strong}"
+  button-ghost:
+    textColor: "{colors.ink-secondary}"
+    rounded: "{rounded.control}"
+    padding: "0 16px"
+    height: "38px"
+  button-ghost-hover:
+    backgroundColor: "{colors.azure-mist}"
+    textColor: "{colors.onyx-secondary}"
   input:
-    backgroundColor: "{colors.sheet}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.sm}"
-    padding: "0 10px"
-    height: "36px"
+    backgroundColor: "{colors.paper-white}"
+    textColor: "{colors.onyx-secondary}"
+    rounded: "{rounded.input}"
+    padding: "0 12px"
+    height: "40px"
   card:
-    backgroundColor: "{colors.sheet}"
-    rounded: "{rounded.md}"
-    padding: "18px"
+    backgroundColor: "{colors.paper-white}"
+    rounded: "{rounded.card}"
+    padding: "22px"
+  finding-card:
+    backgroundColor: "{colors.paper-white}"
+    rounded: "{rounded.list}"
+    padding: "14px 18px"
+  upload-card:
+    backgroundColor: "{colors.paper-white}"
+    textColor: "{colors.onyx-secondary}"
+    rounded: "{rounded.section}"
+    padding: "24px"
+  hero-panel:
+    textColor: "{colors.paper-white}"
+    rounded: "{rounded.feature}"
+    padding: "64px 56px"
   pill-severity-high:
     backgroundColor: "{colors.severity-high-wash}"
     textColor: "{colors.severity-high}"
     rounded: "{rounded.pill}"
-    padding: "2px 10px"
-  chip-data:
-    backgroundColor: "{colors.sheet-tint}"
-    textColor: "{colors.ink}"
-    typography: "{typography.data}"
-    rounded: "{rounded.sm}"
+    padding: "3px 10px"
+  pill-severity-medium:
+    backgroundColor: "{colors.severity-medium-wash}"
+    textColor: "{colors.severity-medium}"
+    rounded: "{rounded.pill}"
+    padding: "3px 10px"
+  pill-severity-low:
+    backgroundColor: "{colors.severity-low-wash}"
+    textColor: "{colors.dark-azure}"
+    rounded: "{rounded.pill}"
+    padding: "3px 10px"
+  pill-status-pass:
+    backgroundColor: "{colors.status-pass-wash}"
+    textColor: "{colors.status-pass}"
+    rounded: "{rounded.pill}"
+    padding: "3px 10px"
+  chip:
+    backgroundColor: "{colors.azure-mist}"
+    textColor: "{colors.onyx-secondary}"
+    typography: "{typography.mono}"
+    rounded: "{rounded.chip}"
     padding: "1px 8px"
-  tab-active:
-    textColor: "{colors.ledger-blue}"
-    padding: "10px 14px"
+  theme-switch:
+    backgroundColor: "{colors.azure-mist}"
+    textColor: "{colors.ink-secondary}"
+    rounded: "{rounded.control}"
+    padding: "3px"
 ---
 
 # Design System: DataSentry
 
 ## Overview
 
-**Creative North Star: "The Lab Notebook"**
+**Creative North Star: "The Calm Instrument"**
 
-DataSentry looks like a careful researcher's notebook: neutral, ruled pages where every entry
-records what was measured, what it might mean and how sure we are. The interface is a working
-tool for a technical user who wants to know quickly what could hurt their model. The design
-therefore spends its energy on legibility, ordering and evidence, not on atmosphere. Brand lives
-in precise details: tabular numerals, monospace for anything that came from the dataset, hairline
-rules, and a single disciplined accent.
+The tool is the product page. DataSentry is a calm, high-contrast instrument where evidence reads first: Paper White or pure Onyx grounds, hairline-divided surfaces, one azure action colour, and numbers set large enough to be read at a glance. It rejects the generic developer dashboard (grey cards, scattered accents, animated backdrops) and it rejects marketing gloss inside working screens.
 
-Density is comfortable-compact. Cards and tables sit close together on a pale paper ground, with
-generous internal padding and tight gutters, so a full summary, overview and findings list fit in
-one or two screens. Severity color appears as small markers (a pill, a dot, a tinted hairline), never as
-large fills, so the page stays calm even when it reports a serious problem. Light and dark themes
-are equal citizens: by default the page follows the operating system, and a three-way switch in
-the top bar (System / Light / Dark) lets the user override it.
+Exactly one surface is branded: the landing hero panel, a static 32px-radius gradient field from Onyx through deep and Dark Azure to Azure Steel, holding the pitch and the upload card. Everything past the upload is the working instrument, flat and hairline-ruled, recoloured in place between a light and a dark theme. The background never moves; motion exists only to explain a change (a panel arriving, a detail opening, a toast confirming), uses opacity and a few pixels of translate, and disappears entirely under reduced motion.
 
-The system rejects two directions explicitly: **alarmist red dashboards** (walls of red, warning
-iconography, panic color for ordinary observations) and **marketing gloss** (gradients, glows,
-hero illustrations, neon).
+Density is moderate and reading-led: 14.5px body, a 1180px column, cards that breathe at 22px, and tabular numerals wherever values are compared. Dataset strings (column names, values, finding codes) are the only monospace text, so the user's data is always visually distinct from the interface's voice.
 
 **Key Characteristics:**
-- Paper-and-ink neutrals with one accent, Ledger Blue.
-- Flat surfaces separated by 1px rules and tonal steps; at most a whisper of shadow in light mode.
-- System sans for interface text; monospace for column names, values and other dataset strings.
-- Severity is coded by color *and* text label, always as a small marker.
-- Tabular numerals wherever numbers are compared.
+- One branded surface (landing hero panel and brand mark); every working screen is flat and ruled.
+- Dark Azure is the single action fill; its readable text form flips to Azure Steel on dark grounds.
+- Hairline borders and tonal steps carry structure; shadows are reserved for two floating objects.
+- Severity and status colour is semantic, always paired with its word, and the only use of the pill shape.
+- Light and dark themes are equals, chosen by a System/Light/Dark segmented control.
+- Static background; short exponential ease-out reveals; nothing continuous except progress.
 
 ## Colors
 
-A cool paper-and-ink palette with one blue accent and a muted five-step status scale.
+A near-monochrome Onyx and Paper White system with a single azure family; warm and green hues appear only as severity and status markers.
 
 ### Primary
-- **Ledger Blue** (light `ledger-blue`, dark `ledger-blue-dark`): primary buttons, the selected
-  tab, links, focus rings, data bars, the dropzone icon and selected table rows (via
-  `ledger-blue-wash`). `ledger-blue-deep` is its hover state. In dark mode the accent lightens, and
-  primary buttons switch to dark text on the light blue.
+- **Dark Azure** (#00638E): the one action colour. Fills primary buttons, the dropzone tile, progress and busy bars in both themes. In light theme it is also the text form of the accent (links, selected tab underline, focus ring, data bars, low-severity marker).
+- **Azure Deep** (#004A6B): primary-button hover in light theme and the second gradient stop.
+- **Azure Steel** (#8CB9CC): the accent's readable text form on dark grounds (links, selected tab underline, focus ring, data bars, low severity) and the gradient's light end.
+- **Light Azure** (#BFD8E3): the hero capability-list bullets, and the source hue for the light theme's nested tints.
+- **Night Azure Hover** (#0A74A3): primary-button hover in dark theme, lifted rather than deepened so it stays visible on Onyx.
+- **Azure Wash** (#DCEBF2) / **Night Azure Wash** (#0D2A38): selected and hovered table rows, dropzone hover, range-plot box fill.
 
 ### Neutral
-- **Paper** (`paper` / `night-paper`): the page ground behind all cards.
-- **Sheet** (`sheet` / `night-sheet`): cards, tables, inputs, the top bar.
-- **Sheet Tint** (`sheet-tint` / `night-sheet-tint`): nested fills such as key-value tiles,
-  category cells, table headers, the dropzone and data chips.
-- **Rule Line / Strong Rule** (`rule-line`, `rule-line-strong` and night variants): card borders
-  and dividers; strong rules for input and button outlines.
-- **Ink, Soft Ink, Faint Ink** (`ink`, `ink-soft`, `ink-faint` and night variants): primary text,
-  secondary text, and metadata or labels respectively.
+- **Paper White** (#FFFFFF): light ground and light surface; the hero's text colour in both themes.
+- **Onyx** (#000000): dark ground. The page is pure black in dark theme.
+- **Onyx Secondary** (#141414): dark surface (cards, upload card) and the light theme's primary text.
+- **Lifted Onyx** (#1F1F1F): dark nested tiles (dropzone, chips, table header, theme track).
+- **Charcoal** (#2B2B2B): dark hover/pressed fill, dark hairline, theme thumb in dark, and the hairline edge that keeps the hero panel's shape on Onyx.
+- **Azure Mist** (#EEF5F8) / **Azure Mist Strong** (#E2EEF3): light nested tiles and light hover/pressed fills; Light Azure at low strength rather than grey.
+- **Hairline** (#E3E6E9) / **Hairline Strong** (#C8CDD2): light dividers and control borders. **Night Hairline Strong** (#3D3D3D) is the dark control border.
+- **Ink Secondary** (#454A50) / **Ink Tertiary** (#5E646B): light supporting text and meta/labels. Dark counterparts **Night Ink Secondary** (#C9CCD0) and **Night Ink Tertiary** (#9B9FA4).
 
-### Status (semantic, not decorative)
-- **Severity High / Medium / Low / Info** (`severity-*`, each with a `-wash` background and a
-  `-dark` text variant): finding severity, as a pill and a faint tint in the finding card's 1px border.
-- **Status Pass** (`status-pass`): the "Pass" category status only.
+### Semantic (severity and status)
+- **Severity High** (#B42318 light, #FF8A80 dark) on its wash; also the server-down dot and error alerts.
+- **Severity Medium** (#9A4A00 light, #F2A65A dark) on its wash; also warning alerts and warn bars.
+- **Severity Low** uses the accent text form (Dark Azure / Azure Steel) on a low wash.
+- **Severity Info / Not evaluated** uses Ink Tertiary (light) or #A8ACB1 (dark) on a neutral wash.
+- **Status Pass** (#18794E light, #5CC995 dark) on its wash; also the server-ok dot.
 
 ### Named Rules
-**The One Voice Rule.** Ledger Blue is the only accent. It marks what the user can act on or has
-selected; it is never used as decoration.
+**The Single Action Rule.** Dark Azure is the only fill that means "act". Never introduce a second accent hue; severity colours are markers, not actions.
 
-**The Marker, Not Fill Rule.** Status colors appear as small markers (pills, dots, a tinted hairline,
-bar fills). They never flood a card, a header or the page.
+**The One Branded Surface Rule.** The branding gradient (Onyx → Azure Deep → Dark Azure → Azure Steel) appears only on the landing hero panel and the brand mark. Working screens never carry it.
 
-**The Word Beside the Color Rule.** Every status color is paired with its word ("high", "Issue",
-"Pass"). Color alone never carries meaning.
+**The Readable Accent Rule.** Accent text, rules and data marks use Dark Azure on light grounds and Azure Steel on dark grounds. Dark Azure text on Onyx is never acceptable.
+
+**The Word-Beside-Colour Rule.** Every severity or status colour appears next to its word ("high", "Issues detected"). Colour alone never carries meaning.
 
 ## Typography
 
-**Display Font:** system UI sans (`system-ui`, -apple-system, Segoe UI, Roboto, …)
-**Body Font:** the same system UI sans
-**Label/Mono Font:** system monospace (`ui-monospace`, Cascadia Code, SF Mono, Consolas)
+**Display Font:** Inter Display, falling back to Inter, then SF Pro Display / Segoe UI Variable Display / Segoe UI / system-ui
+**Body Font:** Inter, falling back to SF Pro Text / Segoe UI Variable Text / Segoe UI / system-ui
+**Label/Mono Font:** ui-monospace (SF Mono, Cascadia Code, Consolas), for dataset strings only
 
-**Character:** a single native sans that feels at home in the user's OS, paired with monospace
-for everything that came from the dataset. No web fonts are loaded; the app must work offline.
+**Character:** One neo-grotesque family in two optical roles: tight, heavy display for headlines and numerals, open text cut for reading. Inter is named first but never loaded (offline, strict CSP, no web fonts); on most machines the interface renders in SF Pro or Segoe UI, and the system must read correctly in either.
 
 ### Hierarchy
-- **Display** (700, clamp(28px, 4vw, 40px), 1.15): the landing headline only.
-- **Headline** (650, 22px): the dataset filename and stat values.
-- **Title** (600, 17px): the summary headline. Card titles use 650 at 14px; finding titles 600 at
-  14.5px.
-- **Body** (400, 14px, 1.55): all running text. Lede copy is 16px with a 54ch measure.
-- **Label** (650, 12px, 0.04em, uppercase): section labels inside panels. Ordinary metadata uses
-  12–12.5px in Faint Ink without uppercase.
-- **Data** (monospace, 12.5px): column names, category values, codes and chips.
+- **Display** (600, clamp(36px, 5vw, 60px), 1.05, -0.03em): the landing headline only, white on the gradient, max 14ch. 34px on phones.
+- **Headline** (650, clamp(24px, 3vw, 32px), 1.15, -0.025em): the dashboard file name. The summary verdict is a sibling step (600, clamp(22px, 2.4vw, 30px), 1.2).
+- **Numeral** (600-650, 26-40px, tabular): severity breakdown counts (28px), overview stat values (26px), single-figure results (40px). Always tabular-nums, display cut.
+- **Title** (600-650, 15px, -0.01em): card titles, finding titles, brand name.
+- **Lede** (400, 18px, 1.5): the landing explainer, max 46ch, white at 82% on the gradient.
+- **Body** (400, 14.5px, 1.55): all running text; long explanations capped near 70ch.
+- **Label** (500, 12.5px, sentence case): stat labels, meta text, kind/category/flags, detail-list terms, hints. Ink Tertiary. Never uppercase, never tracked out.
+- **Mono** (400, 12-12.5px / 0.9em): column names, values, evidence keys, finding codes.
 
 ### Named Rules
-**The Dataset-in-Mono Rule.** Any string that originated in the user's file (column name, value,
-label) is set in monospace, so it is instantly distinguishable from interface copy.
+**The Data Is Mono Rule.** Monospace is reserved for strings that come from the dataset or are machine identifiers. Interface copy is never monospace.
 
-**The Tabular Figures Rule.** Numbers that are compared (stats, counts, table columns) use
-`font-variant-numeric: tabular-nums` and right alignment in tables.
+**The Tabular Numbers Rule.** Every number that sits next to another number (stats, counts, table cells, bars, file meta) uses tabular figures.
+
+**The Sentence-Case Label Rule.** Labels are small, sentence-case and tertiary-coloured. No uppercase tracked labels anywhere.
 
 ## Layout
 
-A centered column with a 1200px maximum width and a 16px side gutter, under a sticky top bar.
-The landing view is two columns (headline and capability list beside the upload card) that stack
-below 900px. The dashboard stacks a file bar, a two-column summary (quality summary beside checks
-by category), a row of auto-fit stat cards (minimum 150px each), a horizontally scrollable tab
-strip and the active tab panel. The columns tab is a table beside a sticky detail panel, which
-also stacks below 900px.
+A single 1180px column centred with 20px gutters (16px on phones), 32px top and 88px bottom padding. The sticky top bar aligns its content to the same column. The landing is one full-width hero panel split 1.1fr / 1fr (pitch left, upload card right) with a 56px gap and 64px/56px padding, collapsing to one column at 900px; on phones the headline and lede lead, the upload card follows immediately, and the capability list moves below it.
 
-Spacing follows an 8px base with frequent 12px and 16px steps; 24px separates major dashboard
-bands. Below 560px, detail lists collapse to one column, bar rows wrap their bar underneath, and
-the file actions fill the width.
+The dashboard reads top-down: file bar (name, meta, export actions), a summary row split 1.2fr / 1fr (verdict card, category card), an overview stat strip of six cells (three at 900px, two at 560px), then underline tabs over the active panel. The columns view pairs a table with a sticky detail panel (1.25fr / 1fr), stacking at 900px.
 
-### Kinetic grid background
-A full-viewport canvas behind all content (`frontend/kinetic-grid.js`), added at the user's request.
-A 55px grid of Ink hairlines (13% opacity) with faint nodes over a 28px dot texture, painted on the
-Paper color. Within 260px of the pointer the grid bends away by up to 24px and lines, nodes and a
-soft node glow shift to Ledger Blue; a press sends out a fading Ledger Blue ripple. Colors are read
-from the theme tokens and update with the theme switch. Cards, tables and the top bar stay opaque,
-so the grid shows only in the gaps. It draws a still grid under `prefers-reduced-motion`, sleeps
-when the pointer settles, and pauses in hidden tabs.
+Spacing rhythm steps 6, 8, 12, 16, 24, 32px, with 22px card padding and 16px gaps between cards in a grid. Breakpoints: 1024px (hero padding eases), 900px (single column), 560px (phone), 480px (form grids to one column). Coarse pointers raise buttons and inputs to 44px.
 
 ## Elevation & Depth
 
-Flat with hairlines. Depth comes from tonal layering (Paper, then Sheet, then Sheet Tint) and 1px
-rules. Light mode adds one near-invisible ambient shadow to cards so they separate from the
-paper; dark mode removes it entirely and relies on tone. The only floating element is the toast.
+The system is flat. Structure comes from hairline borders (1px), tonal steps (ground → surface → nested tile → hover fill) and, in dark theme, from Onyx Secondary and Charcoal surfaces lifting off a pure black ground. Only two objects float and only they cast shadows. The top bar is translucent (82% ground with a 20px saturating blur) rather than shadowed.
 
 ### Shadow Vocabulary
-- **Sheet whisper** (`box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.06)`):
-  cards, finding cards and the upload card in light mode. Never in dark mode.
-- **Toast float** (`box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2)`): the transient toast only.
+- **Thumb lift** (`box-shadow: 0 1px 2px` at 12% Onyx Secondary light, 50% black dark): the theme switch's sliding thumb only.
+- **Float** (`box-shadow: 0 12px 32px` at 14% Onyx Secondary light, 60% black dark): the toast only.
 
 ### Named Rules
-**The Flat-By-Default Rule.** Surfaces never lift on hover. State is shown by tone, border color or
-the accent, not by shadow.
+**The No Decorative Shadow Rule.** Cards, panels, buttons, the hero and the upload card are shadowless. A new shadow needs a new floating object to justify it.
+
+**The Static Ground Rule.** The background is a flat colour (or the static hero gradient). No canvas, particles, grids or animated backdrops.
 
 ## Shapes
 
-Gently rounded rectangles. Controls, tiles, chips and alerts use a 6px radius; cards and tables
-10px; the landing upload card 14px. Pills and bar tracks are fully rounded. Borders are always
-1px, except the 2px underline on the selected tab and the 1.5px dashed outline of the
-dropzone.
+Softly rounded, nested by size: the larger the container, the larger the radius. The ladder is 8px (mono chips), 10px (buttons, segmented control, dropzone key), 12px (inputs, alerts, toast, dropzone tile), 16px (finding cards, tables, correction items), 18px (cards, stat strip, empty state), 24px (upload card; hero on phones), 32px (landing hero panel). Fully round (999px) is reserved for severity/status pills, progress and data bars, and 6-7px dots.
+
+Borders are 1px hairlines everywhere; the dropzone and empty state use a 1.5px / 1px dashed border to signal "place something here". Grouped readouts (overview stats, severity breakdown, category list) are divided by internal hairlines rather than separated into boxes.
 
 ## Components
 
 ### Buttons
-Quiet and exact.
-- **Shape:** gently rounded (6px), 36px tall, 0 14px padding, weight 550.
-- **Default:** Sheet background, Strong Rule border, Ink text; hover tints to Sheet Tint.
-- **Primary:** Ledger Blue fill and border with white text (dark text in dark mode); hover deepens
-  to Ledger Blue Deep. One primary button per region.
-- **Small:** 30px tall, 0 10px, 13px text, for secondary actions such as sample datasets.
-- **Ghost:** no border or fill; used for "New analysis" in the top bar.
-- **Disabled:** 55% opacity with a not-allowed cursor.
-- **Focus:** a 2px Ledger Blue outline offset by 2px (global `:focus-visible`).
+Quiet and solid: one filled action per view, everything else outlined or ghost.
+- **Shape:** gently rounded (10px), 38px tall, 16px horizontal padding, 550 weight, 14px.
+- **Primary:** Dark Azure fill, white text. Hover deepens to Azure Deep (light) or lifts to Night Azure Hover (dark).
+- **Secondary (default):** surface fill with Hairline Strong border; hover fills Azure Mist Strong / Charcoal.
+- **Ghost:** transparent, Ink Secondary text; hover fills the nested tint and darkens the text. Used in the top bar ("New analysis").
+- **Small:** 32px tall, 12px padding, 13px. Sample-data buttons.
+- **States:** press scales to 0.98 over 160ms; disabled is 50% opacity; focus is a 2px accent-ink outline offset 2px.
 
-### Pills and Chips
-- **Severity / status pill:** fully rounded, 12px semibold, a 7px dot in the current color, the
-  status word, and its wash background. Zero counts drop to an outlined, faint pill.
-- **Outline pill:** Strong Rule border and Soft Ink text, for kinds, categories and column flags.
-- **Data chip:** monospace on Sheet Tint with a 6px radius. When it is a button (a column link),
-  hover turns the border and text Ledger Blue.
+### Pills (severity and status only)
+- **Style:** fully round, 12px/600, 3px 10px, the semantic colour as text on its wash, with a 6px dot of the same colour before the word.
+- **Use:** finding severity, summary status, per-category status, failed contract checks. A zero-count pill drops its wash for a hairline outline.
+
+### Meta text (kind, category, flags)
+Not pills. 12.5px/500 Ink Tertiary text, consecutive items joined by a middle dot. Inside a split verdict the recommended strategy takes the accent text colour at 650.
+
+### Chips
+- **Style:** 8px radius, 1px hairline, nested-tint fill, 12px monospace, single-line with ellipsis. They hold dataset strings (affected columns, values).
+- **State:** clickable chips take the accent-ink border and text on hover.
 
 ### Cards / Containers
-- **Corner Style:** 10px.
-- **Background:** Sheet, with Sheet Tint for nested tiles.
-- **Shadow Strategy:** sheet whisper in light mode only (see Elevation & Depth).
-- **Border:** 1px Rule Line.
-- **Internal Padding:** 18px (stat cards 14px 16px).
+- **Corner Style:** 18px (cards), 16px (finding cards, tables, corrections).
+- **Background:** surface (Paper White / Onyx Secondary).
+- **Shadow Strategy:** none (see Elevation & Depth).
+- **Border:** 1px hairline. Finding cards tint their border with 24% of the severity colour (40% on hover); info findings stay neutral.
+- **Internal Padding:** 22px (18px on phones); finding heads 14px 18px.
 
 ### Inputs / Fields
-- **Style:** 36px tall, Sheet background, 1px Strong Rule border, 6px radius, 0 10px padding.
-  Search inputs grow to fill the toolbar.
-- **Focus:** the global 2px Ledger Blue outline.
+- **Style:** 40px tall, 12px radius, Hairline Strong border, surface fill, 14px text; labels 13px/600 above.
+- **Hover:** border mixes 40% accent-ink.
+- **Focus:** accent-ink border plus a 3px accent ring at 22%.
+- **Disclosures** (parsing options, score policy, split limits) share one drawn chevron that rotates from right to down over 240ms.
 
 ### Navigation
-- **Top bar:** sticky Sheet bar with a bottom rule: the brand lockup, the server-status pill, a
-  ghost "New analysis" action and the theme switch. Below 560px the status pill and tagline are
-  removed and the switch shows icons only.
-- **Brand lockup:** a 34px Ledger Blue tile (8px radius) holding faint data rows and an
-  on-accent lens, beside an uppercase wordmark (13.5px, 750, 0.09em tracking) over a monospace
-  "dataset diagnostics" tagline in Faint Ink. Its one authored motion: on hover or keyboard focus the
-  lens shifts up-left and a scan line sweeps the rows once (520ms / 900ms, exponential ease-out).
-  The favicon uses the same mark.
-- **Server-status pill:** fully rounded, Sheet Tint with a 1px rule, Soft Ink text and a 7px dot
-  that reports the real health check: Faint Ink while connecting, Status Pass when reachable,
-  Severity High when unreachable.
-- **Theme switch:** three native radios (System / Light / Dark) in a fully rounded Sheet Tint track
-  with a 1px rule. A tinted-glass thumb (Ledger Blue at 22% over translucent Sheet, a 45% accent
-  edge and a faint top highlight) slides to the checked option in 480ms with exponential ease-out.
-  The checked label is Ink for AA contrast on the tint, and its icon is Ledger Blue and answers with
-  its own motion: the monitor lifts, the sun turns 90°, the moon tilts. Native arrow keys move and
-  select. The choice persists in local storage and is applied before first paint; "System" clears it.
-- **Tabs:** text tabs with a 2px underline. Selected is Ledger Blue; others are Soft Ink and turn
-  Ink on hover. Counts sit beside labels in Faint Ink. Arrow keys move between tabs.
+- **Top bar:** sticky, 56px, translucent blurred ground with a hairline bottom. Brand mark (gradient tile, white lens glyph that shifts 2px on hover) and two-line lockup; a server-status line with a neutral/ok/down dot; the theme switch at the right.
+- **Tabs:** text tabs (14px/500, Ink Secondary) over a hairline; the selected tab goes to primary text at 600 and grows a 2px accent-ink underline from the centre (scaleX, 240ms). Counts follow in 12px tertiary tabular figures. Horizontal scroll on narrow screens, scrollbar hidden.
 
-### Dropzone (instrument slot)
-The upload target on the landing view. A Sheet Tint panel with a 1.5px dashed Strong Rule border
-and 10px corners, laid out as a slot: a 50px icon tile (Ledger Blue Wash, 6px radius, accent
-upload arrow), the title and limits hint beside it, and a "Browse files" key on the right (Sheet
-fill, Strong Rule border with a 2px bottom edge). On hover or drag-over the border turns Ledger
-Blue, the panel tints to Ledger Blue Wash, the tile rises 2px and the key turns accent. Below
-560px the key drops to a full-width row while the tile stays beside the text. The whole panel is
-the single keyboard-focusable control; the key is decorative.
+### Theme Switch (signature)
+Three native radios as a segmented control (System / Light / Dark with 15px stroked icons) on a nested-tint track, 10px radius, 3px inset. A solid thumb (white / Charcoal, 7px radius, thumb lift shadow) slides to the checked option over 320ms ease-out while the interface cross-fades its colours over 240ms. The choice persists in localStorage under `datasentry-theme` and is applied before first paint; labels collapse to icons on phones.
 
-### Finding Card (signature)
-The core unit of the notebook. A Sheet card whose 1px border takes a faint (22%) tint of the
-severity color on every side, with a row of pills (severity, kind, category), a 14.5px title and a one-line explanation. It expands with an
-accessible disclosure to a two-column definition list: what was found, affected columns as data
-chips, why it matters, the next step, limitations, an evidence table in monospace and the
-finding code.
+### Severity Breakdown (signature)
+Four readouts (high, medium, low, info) in one row divided by hairlines, top and bottom rules, no boxes. Each holds a 28px display numeral and, beneath it, the severity word preceded by a 6px dot in its colour. A zero count greys its numeral to Ink Tertiary.
 
-### Data Readouts
-- **Stat card:** a faint label, a 22px tabular value, and an optional faint sub-line.
-- **Key-value tile:** Sheet Tint, 6px radius, an 11.5px faint label over a semibold tabular value.
-- **Bar row:** a monospace label, a 10px fully rounded bar in Ledger Blue on Bar Track
-  (Severity Medium when flagged), and a right-aligned value.
-- **Range plot:** a min–max track with a Ledger Blue IQR box and median tick, labelled at the ends,
-  with an equivalent `aria-label`.
+### Overview Stat Strip
+Six cells in one 18px-radius strip whose internal hairlines come from a 1px gap over the hairline colour. Label (12.5px tertiary), numeral (26px/650), sub-line (12px tertiary). A wide cell holds the column-type bar: a segmented 8px round bar using the azure family and neutral greys, with a dotted legend.
+
+### Landing Hero Panel and Upload Card
+The hero is the static brand-gradient panel (110deg, 165deg when stacked), 32px radius, white type, with a Charcoal hairline in dark theme. The upload card sits on it at 24px radius (surface fill), containing a dashed 18px dropzone with a 48px Dark Azure tile (upload glyph, rises 2px on hover) and a "Browse files" key, the parsing-options disclosure, sample buttons and a privacy note under a hairline.
+
+### Motion
+Exponential ease-out (`cubic-bezier(0.16, 1, 0.3, 1)`) at 160ms for state changes and 240ms for reveals. The dashboard, each tab panel and each opened finding body rise in (opacity plus 6px translate); toasts rise 8px. Progress and busy bars are the only continuous motion. `prefers-reduced-motion: reduce` disables all animations and transitions.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep Ledger Blue as the only accent, reserved for actions, selection, focus and data bars.
-- **Do** set every dataset-originated string in monospace and insert it as text.
-- **Do** pair every severity or status color with its word.
-- **Do** use tabular numerals and right alignment for compared numbers.
-- **Do** separate surfaces with 1px rules and tonal steps; keep dark mode shadow-free.
-- **Do** keep both themes at WCAG 2.2 AA contrast and respect `prefers-reduced-motion`.
-- **Do** define each color once with `light-dark()` so the OS preference and the theme switch
-  share a single source of truth.
+- **Do** use Dark Azure (#00638E) as the only action fill, and Azure Steel (#8CB9CC) for accent text and marks on dark grounds.
+- **Do** pair every severity or status colour with its word, as a pill or as a dot beside the word.
+- **Do** separate grouped readouts with 1px internal hairlines instead of boxing each value.
+- **Do** follow the radius ladder (8 / 10 / 12 / 16 / 18 / 24 / 32px), larger containers taking larger radii.
+- **Do** set dataset strings in monospace and insert them as text; set compared numbers in tabular figures.
+- **Do** design every screen in both themes; dark grounds are pure Onyx with Onyx Secondary and Charcoal surfaces.
+- **Do** keep motion to 160ms/240ms exponential ease-out opacity and small translate, all removed under reduced motion.
 
 ### Don't:
-- **Don't** build alarmist red dashboards: no red-filled cards or headers, no warning-icon walls,
-  no panic color for observations such as imbalance or outliers.
-- **Don't** add marketing gloss: no gradients, glows, neon, hero illustrations or decorative
-  animation. The one sanctioned exception is the kinetic grid background (see Layout), added at
-  the user's explicit request.
-- **Don't** introduce a second accent hue or load web fonts.
-- **Don't** lift elements with shadow on hover.
+- **Don't** use the branding gradient anywhere but the landing hero panel and the brand mark.
+- **Don't** give kind, category or column flags the pill shape; only severity and status are pills.
+- **Don't** add decorative shadows; only the theme thumb and the toast float.
+- **Don't** add animated or textured backgrounds (canvas grids, particles, moving gradients).
+- **Don't** load web fonts or external assets; the type must hold up in SF Pro and Segoe UI.
+- **Don't** set Dark Azure text on Onyx or Onyx Secondary; switch to Azure Steel.
+- **Don't** use uppercase tracked labels or eyebrow lines above headings.
