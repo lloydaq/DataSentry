@@ -154,6 +154,26 @@ class DuplicateSummary(Model):
     semantics: str
 
 
+class DifferingColumn(Model):
+    column: str
+    n_groups: int
+
+
+class NearDuplicateSummary(Model):
+    status: Literal["computed", "skipped"]
+    reason: str | None = None
+    n_groups: int = 0
+    n_rows_involved: int = 0
+    rows_involved_fraction: float = 0.0
+    columns_compared: list[str] = []
+    columns_ignored: list[str] = []
+    differing_columns: list[DifferingColumn] = []
+    example_groups: list[list[int]] = Field(
+        default=[], description="Row positions (0-based, header excluded) of example groups."
+    )
+    semantics: str
+
+
 class CorrelatedPair(Model):
     column_a: str
     column_b: str
@@ -372,6 +392,7 @@ class AnalysisResult(Model):
     overview: Overview
     columns: list[ColumnProfile] | None
     duplicates: DuplicateSummary | None
+    near_duplicates: NearDuplicateSummary | None = None
     redundancy: RedundancySummary | None
     target: TargetAnalysis | None
     findings: list[Finding]

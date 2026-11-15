@@ -41,7 +41,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/api/uploads.py` | Size-capped, in-memory multipart parsing (uploads never spool to disk) |
 | `app/models/schemas.py` | Pydantic contracts; `allow_inf_nan=False`, so outputs are strict JSON |
 | `app/services/loader.py` | CSV validation/parsing; `ParseOptions` (allow-listed delimiter and encoding, capped missing-value tokens, echoed as `dataset.parsing`); `DatasetError` for expected, user-safe failures |
-| `app/services/profiler.py` | Types, missing values, duplicates, numeric/categorical stats, redundancy |
+| `app/services/profiler.py` | Types, missing values, exact and near-duplicates (normalized grouping, cell-bounded), numeric/categorical stats, redundancy |
 | `app/services/target.py` | Target task inference, class distribution, label conflicts |
 | `app/services/leakage.py` | Single-feature leakage screen; train/test overlap, including entity and time-order checks |
 | `app/services/contract.py` | Data contracts: export from a dataset; strict parsing of untrusted contracts; per-value checks |
@@ -68,7 +68,7 @@ plus, from milestone 6, the leakage screen, train/test overlap, label review and
 corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6) and the datasheet draft (phase 7).
 
 Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
-imputation as a correction, near-duplicate detection, non-CSV formats, authentication. Build them
+imputation as a correction, fuzzy (typo-tolerant) duplicate matching, non-CSV formats, authentication. Build them
 only when asked, one independently testable milestone at a time.
 
 ## Diagnostic integrity

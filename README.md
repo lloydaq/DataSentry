@@ -69,7 +69,7 @@ number. Instead it reports each category separately and says which checks did no
 | Area | What you get |
 |---|---|
 | **Validation** | Safe in-memory CSV parsing with size, row and column limits; empty, duplicate and malformed headers caught before pandas silently renames them; comma, semicolon, tab or pipe delimiters, UTF-8 or Latin-1, and your own missing-value tokens (such as `?` or `-999`) |
-| **Profiling** | Inferred types, missing values, exact duplicate rows, numeric statistics with IQR outlier candidates, category frequencies and rare categories |
+| **Profiling** | Inferred types, missing values, exact and near-duplicate rows (equal after normalizing case, spacing, punctuation and numeric precision), numeric statistics with IQR outlier candidates, category frequencies and rare categories |
 | **Column quality** | Constant and near-constant columns, identifier-like and high-cardinality columns, identical columns, near-perfectly correlated numeric pairs |
 | **Consistency** | Numbers stored as text, category variants that differ only in case or spacing, stray whitespace, infinite values |
 | **Target analysis** | Classification vs. regression inference, class balance, rare and single classes, missing labels, identical rows with conflicting labels |
@@ -422,6 +422,15 @@ match `?`). Excel, PDF, archives and binary files are rejected with a message.
   compared after parsing (`1` and `1.0` in a numeric column are equal), with missing values equal
   to each other. Only repeats are counted, not first occurrences. Medium severity from 5% of rows.
   Duplicates are never removed automatically.
+- **Near-duplicates.** Rows that differ as stored in the compared columns but are identical after
+  normalization: text is Unicode-normalized (NFKC), case-folded, stripped of punctuation and has
+  whitespace collapsed; numbers are compared to 6 significant digits; missing values equal each
+  other. Empty columns are ignored, and so are identifier-like columns whose values stay all
+  distinct after normalization (such as IDs), because copies of one record often differ only in
+  their ID; a column whose values collide after normalization (a name written two ways) is compared. Rows are grouped by their normalized form in one linear pass (no pairwise
+  comparison), so typos that change letters are not matched. A potential issue, medium severity
+  when at least 5% of rows are in such groups, with up to 10 example groups (5 row positions
+  each). Skipped, and reported as skipped, above 2,000,000 compared cells.
 - **Constant / near-constant.** Constant means at most one distinct non-missing value.
   Near-constant means the most frequent value covers at least 95% of at least 20 non-missing values
   (an observation, because rare-event flags are legitimate).
@@ -546,9 +555,10 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 - CSV only. Delimiter and encoding are chosen by you from a fixed list (comma, semicolon, tab or
   pipe; UTF-8 or Latin-1) and never detected automatically: a semicolon file read as comma-separated
   loads as a single column.
-- Only exact duplicates and exact train/test matches are detected, not near-duplicates. Related
-  records (for example the same customer at two dates) are only found when you select an entity
-  column.
+- Near-duplicates are found only when rows match after normalizing case, spacing, punctuation
+  and numeric precision; typos and fuzzy matches are not detected, and train/test overlap is exact.
+  Related records (for example the same customer at two dates) are only found when you select an
+  entity column.
 - Datetime recognition is ISO 8601 only. Booleans are recognized as `true`/`false`, not `yes`/`no`.
 - Heuristics with fixed thresholds can produce false positives and false negatives; every finding
   says what it is based on.
@@ -566,7 +576,6 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 
 - Reproducible model-impact experiments (for example duplicate contamination across a split, or
   controlled label noise) with a fixed baseline, an isolated test set and multiple seeds.
-- Near-duplicate detection (normalized text, numeric tolerance).
 - Optional Cleanlab integration for label issues, once its dependency footprint is justified.
 - Frontend unit tests and an automated browser test in CI.
 
