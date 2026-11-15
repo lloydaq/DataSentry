@@ -300,6 +300,7 @@ function resetToUpload() {
   clear($("overlap-results"));
   clear($("split-results"));
   clear($("compare-results"));
+  clear($("contract-results"));
   window.scrollTo(0, 0);
   $("dropzone").focus();
 }
@@ -325,7 +326,7 @@ async function rerun(target) {
 function setDashboardBusy(busy) {
   state.busy = busy;
   $("dashboard-busy").hidden = !busy;
-  for (const id of ["run-target", "download-json", "download-html", "new-analysis", "run-split"]) {
+  for (const id of ["run-target", "download-json", "download-html", "new-analysis", "run-split", "export-contract"]) {
     $(id).disabled = busy;
   }
   $("run-label-review").disabled = busy || !canReviewLabels();
@@ -346,6 +347,7 @@ function showDashboard(result, { keepTab = false } = {}) {
   clear($("overlap-results"));
   clear($("split-results"));
   clear($("compare-results"));
+  clear($("contract-results"));
   renderFileBar(result);
   renderSummary(result);
   renderOverview(result);
@@ -1046,6 +1048,74 @@ async function runCompare(previousFile) {
   }
 }
 
+// --- Data contracts ------------------------------------------------------------------------
+
+const CONTRACT_MAX_BYTES = 1_000_000; // mirrors contract.CONTRACT_MAX_BYTES; the server enforces it
+const RULE_TEXT = {
+  missing_column: "missing column",
+  unexpected_column: "unexpected column",
+  type: "wrong type",
+  not_nullable: "missing values",
+  unique: "repeated values",
+  min: "below minimum",
+  max: "above maximum",
+  allowed_values: "not allowed",
+};
+
+async function exportContract() {
+  if (state.busy) return;
+  setDashboardBusy(true);
+  try {
+    const spec = await (await post("/api/contract/export", baseForm())).json();
+    const stem = state.result.dataset.filename.replace(/\.csv$/i, "");
+    downloadBlob(new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }), `${stem}.contract.json`);
+    toast("Contract downloaded. Review it before relying on it.");
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    setDashboardBusy(false);
+  }
+}
+
+async function runContractCheck(contractFile) {
+  if (state.busy) return;
+  const out = clear($("contract-results"));
+  if (!/\.json$/i.test(contractFile.name) || contractFile.size === 0 || contractFile.size > CONTRACT_MAX_BYTES) {
+    put(out, h("div", { class: "alert alert-error", text: `Choose a contract .json file of at most ${fmtBytes(CONTRACT_MAX_BYTES)}.` }));
+    return;
+  }
+  put(out, h("p", { class: "small muted", text: `Checking against ${contractFile.name}…` }));
+  const form = new FormData();
+  form.append("file", state.file, state.file.name);
+  form.append("contract", contractFile, contractFile.name);
+  setDashboardBusy(true);
+  try {
+    const res = await (await post("/api/contract/check", form)).json();
+    put(clear(out), h("div", { class: "card" },
+      h("p", { class: "split-verdict" },
+        h("span", { class: `pill ${res.passed ? "pill-outline" : "dot sev-high"}`, text: res.passed ? "Passed" : "Failed" }),
+        h("span", { text: res.passed
+          ? `The file meets all ${fmtInt(res.n_rules_checked)} contract rules.`
+          : `${fmtInt(res.violations.length)} rule(s) broken out of ${fmtInt(res.n_rules_checked)} checked.` })),
+      res.violations.length ? h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
+        h("thead", {}, h("tr", {},
+          h("th", { text: "Column" }), h("th", { text: "Rule" }), h("th", { class: "num", text: "Rows" }), h("th", { text: "First rows" }))),
+        h("tbody", {}, res.violations.map((v) => h("tr", {},
+          h("td", {}, columnChip(v.column)),
+          h("td", { text: RULE_TEXT[v.rule] || v.rule }),
+          h("td", { class: "num", text: v.n_rows ? fmtInt(v.n_rows) : "—" }),
+          h("td", { text: v.example_rows.length ? v.example_rows.join(", ") : "—" })))))) : null,
+      h("details", { class: "split-limits small muted" },
+        h("summary", { text: "Limitations" }),
+        h("ul", {}, res.limitations.map((l) => h("li", { text: l }))))));
+  } catch (err) {
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
+  } finally {
+    setDashboardBusy(false);
+    $("contract-file-input").value = "";
+  }
+}
+
 // --- Corrections ---------------------------------------------------------------------------
 
 function renderCorrections(r) {
@@ -1191,6 +1261,19 @@ function selectTab(id) {
     tab.setAttribute("aria-selected", String(active));
     tab.tabIndex = active ? 0 : -1;
     $(tab.getAttribute("aria-controls")).hidden = !active;
+    if (active) revealTab(tab);
+  }
+}
+
+// Keep the selected tab visible in the horizontally scrolling tab strip (phones), without
+// scrolling the page itself.
+function revealTab(tab) {
+  const strip = tab.parentElement;
+  if (strip.scrollWidth <= strip.clientWidth) return;
+  const left = tab.getBoundingClientRect().left - strip.getBoundingClientRect().left + strip.scrollLeft;
+  if (left < strip.scrollLeft) strip.scrollLeft = left;
+  else if (left + tab.offsetWidth > strip.scrollLeft + strip.clientWidth) {
+    strip.scrollLeft = left + tab.offsetWidth - strip.clientWidth;
   }
 }
 
@@ -1304,6 +1387,8 @@ function init() {
   $("run-target").addEventListener("click", () => rerun($("target-select").value || null));
   $("run-label-review").addEventListener("click", runLabelReview);
   $("split-form").addEventListener("submit", runSplitAdvice);
+  $("export-contract").addEventListener("click", exportContract);
+  $("contract-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runContractCheck(e.target.files[0]); });
   $("previous-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runCompare(e.target.files[0]); });
   $("sample-previous").addEventListener("click", async () => {
     try {

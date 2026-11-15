@@ -396,7 +396,8 @@ button.chip:hover { border-color: var(--accent); color: var(--accent); }
 .split-limits summary { cursor: pointer; }
 #panel-compare { display: grid; gap: 16px; }
 #compare-results { display: grid; gap: 16px; }
-#compare-results:empty { display: none; }
+#compare-results:empty, #contract-results:empty { display: none; }
+#panel-contract { display: grid; gap: 16px; }
 .compare-intro > * + * { margin-top: 10px; }
 .compare-schema { padding-left: 18px; display: grid; gap: 4px; color: var(--text-2); }
 .compare-findings { display: grid; gap: 14px; }
