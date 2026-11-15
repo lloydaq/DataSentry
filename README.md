@@ -18,6 +18,7 @@ informed corrections before model training.
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-label%20review-0f1b3d?logo=scikitlearn&logoColor=white)
 ![Tested with pytest](https://img.shields.io/badge/tested%20with-pytest-0f1b3d?logo=pytest&logoColor=white)
 ![Runs locally](https://img.shields.io/badge/runs-locally%2C%20no%20cloud-00638E)
+[![License: MIT](https://img.shields.io/badge/license-MIT-00638E)](LICENSE)
 
 [Quick start](#quick-start) · [Capabilities](#key-capabilities) · [How it works](#how-it-works) · [API](#api-reference) · [Methodology](#diagnostic-methodology) · [Security](#security-and-privacy)
 
@@ -48,6 +49,7 @@ informed corrections before model training.
 - [Limitations](#limitations)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Why DataSentry
 
@@ -253,7 +255,14 @@ python -m pytest                              # unit, API integration, security 
 python -m compileall -q app tests scripts     # Python syntax
 node --check frontend/app.js                  # JavaScript syntax (optional, requires Node.js)
 node --check frontend/theme.js
+node --test "tests/frontend/*.test.mjs"       # frontend unit tests (Node.js 22+)
+node tests/e2e/smoke.mjs                      # browser smoke test: starts the app, drives headless Chrome
 ```
+
+The smoke test starts the app on a free loopback port and runs the full workflow in headless Chrome
+(theme switch, sample analysis, every tab, label review, train/test overlap, phone-width layout).
+It fails on any CSP violation, console error or stray `null` text. Set `CHROME_PATH` if Chrome is
+not in a standard location, and `PYTHON` to use an interpreter other than the repo `.venv`.
 
 ## API reference
 
@@ -518,3 +527,7 @@ Issues and pull requests are welcome. Before opening a pull request:
 
 Project conventions for contributors and coding agents are in [`CLAUDE.md`](CLAUDE.md); the visual
 system is documented in [`DESIGN.md`](DESIGN.md).
+
+## License
+
+DataSentry is released under the [MIT License](LICENSE).
