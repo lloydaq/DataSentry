@@ -185,6 +185,13 @@ async function main() {
     check(await evaluate(`!document.querySelector("#overlap-results .alert-error")
       && /Test rows found in train/.test(document.getElementById("overlap-results").textContent)`), "train/test overlap shows its result");
 
+    await evaluate(`document.getElementById("run-impact").click()`);
+    await waitFor("model-impact experiments", () => evaluate(
+      `document.querySelectorAll("#impact-results .impact-experiment").length === 3
+        || !!document.querySelector("#impact-results .alert")`));
+    check(await evaluate(`!document.querySelector("#impact-results .alert")
+      && document.querySelectorAll("#impact-results .impact-diff").length >= 3`), "model-impact experiments show their results");
+
     console.log("Review log");
     const note = "<b>known</b> & accepted";
     await evaluate(`(() => {

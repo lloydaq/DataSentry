@@ -28,6 +28,7 @@ from app.models.schemas import (
     HealthResponse,
     LabelReviewResult,
     LimitsInfo,
+    ModelImpactResult,
     SplitAdvice,
     TrainTestOverlapResult,
 )
@@ -36,6 +37,7 @@ from app.services import (
     corrections,
     datasheet,
     diff,
+    experiments,
     label_review,
     leakage,
     report,
@@ -211,6 +213,24 @@ async def review_labels(request: Request) -> LabelReviewResult:
     return await _run(
         request,
         lambda: label_review.review_labels(
+            load_csv(upload.data, limits, upload.filename, options), target, limits
+        ),
+    )
+
+
+@router.post("/model-impact", response_model=ModelImpactResult, responses=_ERRORS)
+async def model_impact(request: Request) -> ModelImpactResult:
+    """Opt-in model-impact experiments. Fields: ``file``, required ``target_column`` and the
+    parsing fields."""
+    upload, fields = await _single_upload(request)
+    target = _target(fields)
+    if target is None:
+        raise DatasetError("missing_target_column", "Model-impact experiments require a target column.")
+    options = _options(fields)
+    limits = _limits(request)
+    return await _run(
+        request,
+        lambda: experiments.run_experiments(
             load_csv(upload.data, limits, upload.filename, options), target, limits
         ),
     )

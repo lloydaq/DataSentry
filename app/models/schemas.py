@@ -437,6 +437,56 @@ class LabelReviewResult(Model):
     limitations: list[str] = []
 
 
+class ExperimentCondition(Model):
+    """One training condition, scored once per seed on that seed's held-out test set."""
+
+    label: str
+    scores: list[float]
+    mean: float
+    std: float | None = Field(description="Sample standard deviation across seeds (ddof=1).")
+    min: float
+    max: float
+
+
+class ExperimentDifference(Model):
+    """Per-seed score differences between two conditions on the same test sets."""
+
+    label: str
+    differences: list[float]
+    mean: float
+    min: float
+    max: float
+
+
+class ExperimentResult(Model):
+    code: Literal["leakage", "duplicates", "label_noise"]
+    title: str
+    question: str
+    status: Literal["computed", "not_applicable"]
+    reason: str | None = None
+    conditions: list[ExperimentCondition] = []
+    differences: list[ExperimentDifference] = []
+    summary: str | None = None
+    details: dict[str, EvidenceValue] = {}
+
+
+class ModelImpactResult(Model):
+    status: Literal["completed", "unsupported"]
+    reason: str | None = None
+    dataset: DatasetInfo
+    target_column: str
+    model: str | None = None
+    metric: Literal["balanced_accuracy"] = "balanced_accuracy"
+    seeds: list[int] = []
+    test_fraction: float | None = None
+    n_rows_used: int = 0
+    n_rows_excluded: int = 0
+    features_used: list[str] = []
+    leaky_features: list[str] = []
+    experiments: list[ExperimentResult] = []
+    limitations: list[str] = []
+
+
 class EntityOverlap(Model):
     column: str
     n_test_entities: int

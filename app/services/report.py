@@ -23,6 +23,7 @@ from app.models.schemas import (
 from app.services.loader import DatasetError
 from app.services import contract as C
 from app.services import diff as Dd
+from app.services import experiments as X
 from app.services import findings as F
 from app.services import leakage as L
 from app.services import loader as D
@@ -115,6 +116,14 @@ METHODOLOGY = [
     f"{C.VALUE_MAX_LENGTH} characters). Checks are per value: numeric means a finite number, "
     "boolean true/false, datetime ISO 8601. Every violation reports its row count and up to "
     f"{C.VIOLATION_EXAMPLES_LIMIT} row numbers, never cell values.",
+    "Model-impact experiments (opt-in, classification): the label-review model is trained under "
+    f"several conditions and scored with balanced accuracy on the same {X.TEST_FRACTION:.0%} "
+    f"held-out test set within each of {len(X.SEEDS)} fixed seeds ({', '.join(map(str, X.SEEDS))}). "
+    "Leakage: with versus without the features the leakage screen flagged. Duplicates: with versus "
+    "without training rows that are exact copies of a test row. Label noise: "
+    f"{', '.join(f'{r:.0%}' for r in X.NOISE_RATES)} of training labels flipped uniformly to another "
+    f"class, test labels unchanged. Classes with fewer than {X.MIN_CLASS_EXAMPLES} rows are excluded. "
+    "Per-seed scores, mean, sample standard deviation and range are reported; no significance test.",
     "Summary: no numeric score. A category is 'issue' if it has a likely or potential problem of "
     "high or medium severity, 'review' for lower-severity problems or inconclusive checks, "
     "'pass' when only observations remain, and 'not_evaluated' when its checks did not run.",

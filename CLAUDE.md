@@ -50,7 +50,9 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/splits.py` | Split Doctor: opt-in split-strategy advice from target, entity and time columns |
 | `app/services/findings.py` | Rules turning observations into findings; qualitative summary (no score) |
 | `app/services/analysis.py` | Stage orchestration; a failed stage makes the result `partial` |
+| `app/services/modeling.py` | The shared baseline model: feature selection, feature matrix and the leak-free scikit-learn pipeline |
 | `app/services/label_review.py` | Opt-in cross-validated label review (scikit-learn) |
+| `app/services/experiments.py` | Opt-in model-impact experiments: leakage, duplicates, label noise; fixed seeds, same test sets, per-seed scores |
 | `app/services/corrections.py` | Correction proposals; approved application to a copy with audit trail |
 | `app/services/report.py` | JSON report document and escaped, script-free HTML report; validates review decisions sent with a report and keeps those matching a finding |
 | `frontend/` | `index.html`, `style.css`, `app.js` (UI; DOM appends go through `put()`/`h()`, which skip nulls), `theme.js` (applies the saved theme before paint; key `datasentry-theme`); design tokens live at the top of `style.css`; static background, no build step, no external assets |
@@ -65,9 +67,9 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6), the datasheet draft (phase 7) and the finding review log (phase 8).
+corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6), the datasheet draft (phase 7), the finding review log (phase 8), near-duplicate detection (phase 9) and model-impact experiments (phase 10).
 
-Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
+Not implemented (do not describe as existing): Cleanlab,
 imputation as a correction, fuzzy (typo-tolerant) duplicate matching, non-CSV formats, authentication. Build them
 only when asked, one independently testable milestone at a time.
 

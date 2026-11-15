@@ -300,6 +300,7 @@ function resetToUpload() {
   clear($("label-review-results"));
   clear($("overlap-results"));
   clear($("split-results"));
+  clear($("impact-results"));
   clear($("compare-results"));
   clear($("contract-results"));
   window.scrollTo(0, 0);
@@ -331,6 +332,7 @@ function setDashboardBusy(busy) {
     $(id).disabled = busy;
   }
   $("run-label-review").disabled = busy || !canReviewLabels();
+  $("run-impact").disabled = busy || !canReviewLabels();
 }
 
 function canReviewLabels() {
@@ -348,6 +350,7 @@ function showDashboard(result, { keepTab = false } = {}) {
   clear($("label-review-results"));
   clear($("overlap-results"));
   clear($("split-results"));
+  clear($("impact-results"));
   clear($("compare-results"));
   clear($("contract-results"));
   renderFileBar(result);
@@ -959,6 +962,10 @@ function renderTarget(r) {
 function renderMl() {
   const ok = canReviewLabels();
   $("run-label-review").disabled = !ok; // busy state is applied by setDashboardBusy
+  $("run-impact").disabled = !ok;
+  $("impact-hint").textContent = ok
+    ? `Classification targets, up to ${fmtInt(state.limits?.max_label_review_rows || 0)} rows. Runs only when you click.`
+    : "Select a classification target on the Target tab first.";
   $("label-review-hint").textContent = ok
     ? `Uses up to ${fmtInt(state.limits?.max_label_review_rows || 0)} rows. Runs only when you click.`
     : "Select a classification target on the Target tab first.";
@@ -1018,6 +1025,58 @@ async function runSplitAdvice(event) {
         kv("Rows in date order", res.time.rows_in_time_order === null ? "—" : res.time.rows_in_time_order ? "yes" : "no")) : null,
       h("details", { class: "split-limits small muted" },
         h("summary", { text: "Limitations" }),
+        h("ul", {}, res.limitations.map((l) => h("li", { text: l })))));
+  } catch (err) {
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
+  } finally {
+    setDashboardBusy(false);
+  }
+}
+
+const signed = (x) => `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(3)}`;
+
+function impactTable(e) {
+  return h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
+    h("thead", {}, h("tr", {},
+      h("th", { text: "Condition" }), h("th", { class: "num", text: "Mean" }), h("th", { class: "num", text: "Spread (sd)" }),
+      h("th", { class: "num", text: "Range" }), h("th", { text: "Per seed" }))),
+    h("tbody", {},
+      e.conditions.map((c) => h("tr", {},
+        h("td", { text: c.label }),
+        h("td", { class: "num", text: c.mean.toFixed(3) }),
+        h("td", { class: "num", text: c.std === null ? "—" : c.std.toFixed(3) }),
+        h("td", { class: "num", text: `${c.min.toFixed(3)} – ${c.max.toFixed(3)}` }),
+        h("td", { class: "impact-seeds", text: c.scores.map((s) => s.toFixed(3)).join("  ") }))),
+      e.differences.map((d) => h("tr", { class: "impact-diff" },
+        h("td", { text: `Difference: ${d.label}` }),
+        h("td", { class: "num", text: signed(d.mean) }),
+        h("td", { class: "num", text: "" }),
+        h("td", { class: "num", text: `${signed(d.min)} – ${signed(d.max)}` }),
+        h("td", { class: "impact-seeds", text: d.differences.map(signed).join("  ") }))))));
+}
+
+async function runImpact() {
+  if (state.busy) return;
+  const out = clear($("impact-results"));
+  put(out, h("p", { class: "small muted", text: "Training the model under each condition and seed…" }));
+  setDashboardBusy(true);
+  try {
+    const res = await (await post("/api/model-impact", baseForm())).json();
+    if (res.status !== "completed") {
+      put(clear(out), h("div", { class: "alert alert-warn", text: res.reason }));
+      return;
+    }
+    put(clear(out),
+      h("p", { class: "small muted", text: `${fmtInt(res.n_rows_used)} rows · metric: balanced accuracy · seeds ${res.seeds.join(", ")} · test share ${fmtPct(res.test_fraction, 0)}` }),
+      res.experiments.map((e) => h("section", { class: "impact-experiment" },
+        h("h3", { class: "compare-subtitle", text: e.title }),
+        h("p", { class: "small muted", text: e.question }),
+        e.status === "computed"
+          ? [impactTable(e), h("p", { class: "small", text: e.summary })]
+          : h("p", { class: "small muted", text: `Not run: ${e.reason}` }))),
+      h("details", { class: "split-limits small muted" },
+        h("summary", { text: "Model and limitations" }),
+        h("p", { text: res.model }),
         h("ul", {}, res.limitations.map((l) => h("li", { text: l })))));
   } catch (err) {
     put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
@@ -1559,6 +1618,7 @@ function init() {
   $("filter-type").addEventListener("change", renderColumns);
   $("run-target").addEventListener("click", () => rerun($("target-select").value || null));
   $("run-label-review").addEventListener("click", runLabelReview);
+  $("run-impact").addEventListener("click", runImpact);
   $("split-form").addEventListener("submit", runSplitAdvice);
   $("review-import").addEventListener("change", async (e) => {
     if (e.target.files[0]) await importReviews(e.target.files[0]);

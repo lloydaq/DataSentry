@@ -53,7 +53,7 @@ consistency, numeric and categorical diagnostics; target analysis; single-featur
 train/test overlap; cross-validated label review; approved corrections; JSON/HTML reports; a
 dashboard UI with light and dark themes.
 
-Not implemented (never present as existing): model-impact experiments, Cleanlab, imputation as a
+Not implemented (never present as existing): Cleanlab, imputation as a
 correction, fuzzy (typo-tolerant) duplicate matching, non-CSV formats, authentication.
 
 Constraints (chosen by the assistant at the user's request, marked *delegated*):
