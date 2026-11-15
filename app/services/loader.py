@@ -14,6 +14,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from app.config import Limits
+from app.models.schemas import ParsingInfo
 
 _BINARY_SIGNATURES = (
     (b"PK\x03\x04", "a ZIP archive or Excel workbook"),
@@ -24,6 +25,13 @@ _BINARY_SIGNATURES = (
 )
 _ALLOWED_EXTENSIONS = (".csv",)
 _SAFE_FILENAME = re.compile(r"[^A-Za-z0-9._-]+")
+
+# Parsing options. Only these named values are accepted; anything else is rejected.
+DELIMITERS = {"comma": ",", "semicolon": ";", "tab": "\t", "pipe": "|"}
+# "utf-8" also accepts a UTF-8 byte-order mark. Latin-1 decodes any byte, so it never fails.
+ENCODINGS = {"utf-8": "utf-8-sig", "latin-1": "latin-1"}
+MAX_MISSING_VALUE_TOKENS = 20
+MAX_MISSING_VALUE_TOKEN_LENGTH = 32
 
 
 class DatasetError(Exception):
@@ -37,11 +45,87 @@ class DatasetError(Exception):
 
 
 @dataclass(frozen=True)
+class ParseOptions:
+    """How to read a CSV: a named delimiter, a named encoding and extra missing-value tokens.
+
+    Missing-value tokens are matched against whole cells, exactly, in addition to the parser's
+    defaults (empty cells, ``NA``, ``N/A``, ``null``, ``NaN`` and similar).
+    """
+
+    delimiter: str = "comma"
+    encoding: str = "utf-8"
+    missing_values: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.delimiter not in DELIMITERS:
+            raise DatasetError(
+                "invalid_request",
+                f"Field 'delimiter' must be one of: {', '.join(DELIMITERS)}.",
+            )
+        if self.encoding not in ENCODINGS:
+            raise DatasetError(
+                "invalid_request", f"Field 'encoding' must be one of: {', '.join(ENCODINGS)}."
+            )
+        if len(self.missing_values) > MAX_MISSING_VALUE_TOKENS:
+            raise DatasetError(
+                "invalid_request",
+                f"Field 'missing_values' accepts at most {MAX_MISSING_VALUE_TOKENS} tokens.",
+            )
+        for token in self.missing_values:
+            if not token or len(token) > MAX_MISSING_VALUE_TOKEN_LENGTH:
+                raise DatasetError(
+                    "invalid_request",
+                    "Each missing-value token must be 1 to "
+                    f"{MAX_MISSING_VALUE_TOKEN_LENGTH} characters long.",
+                )
+            if any(ord(ch) < 32 or ord(ch) == 127 for ch in token):
+                raise DatasetError(
+                    "invalid_request", "Missing-value tokens cannot contain control characters."
+                )
+
+    @property
+    def separator(self) -> str:
+        return DELIMITERS[self.delimiter]
+
+    @property
+    def codec(self) -> str:
+        return ENCODINGS[self.encoding]
+
+    def info(self) -> ParsingInfo:
+        return ParsingInfo(
+            delimiter=self.delimiter,
+            encoding=self.encoding,
+            missing_values=list(self.missing_values),
+        )
+
+
+def parse_options(
+    delimiter: str | None = None, encoding: str | None = None, missing_values: str | None = None
+) -> ParseOptions:
+    """Build options from raw form text. Empty fields mean the default.
+
+    ``missing_values`` is a comma-separated list; surrounding whitespace is trimmed, empty items
+    are ignored and duplicates are removed (first occurrence wins).
+    """
+    tokens: list[str] = []
+    for item in (missing_values or "").split(","):
+        token = item.strip()
+        if token and token not in tokens:
+            tokens.append(token)
+    return ParseOptions(
+        delimiter=(delimiter or "").strip().lower() or "comma",
+        encoding=(encoding or "").strip().lower() or "utf-8",
+        missing_values=tuple(tokens),
+    )
+
+
+@dataclass(frozen=True)
 class LoadedDataset:
     frame: pd.DataFrame
     filename: str
     size_bytes: int
     sha256: str
+    options: ParseOptions = ParseOptions()
 
 
 def sanitize_filename(filename: str | None, default: str = "dataset.csv") -> str:
@@ -73,10 +157,12 @@ def _check_format(raw: bytes, filename: str | None) -> None:
         )
 
 
-def _validate_structure(raw: bytes, limits: Limits) -> tuple[list[str], int]:
+def _validate_structure(
+    raw: bytes, limits: Limits, options: ParseOptions
+) -> tuple[list[str], int]:
     """Return (header, n_data_rows) after validating encoding, header and row widths."""
-    text = io.TextIOWrapper(io.BytesIO(raw), encoding="utf-8-sig", newline="")
-    reader = csv.reader(text, strict=True)
+    text = io.TextIOWrapper(io.BytesIO(raw), encoding=options.codec, newline="")
+    reader = csv.reader(text, delimiter=options.separator, strict=True)
     try:
         header: list[str] | None = None
         for record in reader:
@@ -105,7 +191,11 @@ def _validate_structure(raw: bytes, limits: Limits) -> tuple[list[str], int]:
                     status_code=413,
                 )
     except UnicodeDecodeError:
-        raise DatasetError("invalid_encoding", "The file is not valid UTF-8 text.") from None
+        raise DatasetError(
+            "invalid_encoding",
+            "The file is not valid UTF-8 text. If it was exported from Excel or an older "
+            "system, try the Latin-1 encoding option.",
+        ) from None
     except csv.Error:
         raise DatasetError(
             "malformed_csv",
@@ -140,7 +230,13 @@ def _validate_header(header: list[str], limits: Limits) -> None:
         )
 
 
-def load_csv(raw: bytes, limits: Limits, filename: str | None = None) -> LoadedDataset:
+def load_csv(
+    raw: bytes,
+    limits: Limits,
+    filename: str | None = None,
+    options: ParseOptions | None = None,
+) -> LoadedDataset:
+    options = options or ParseOptions()
     if len(raw) > limits.max_upload_bytes:
         raise DatasetError(
             "file_too_large",
@@ -150,11 +246,17 @@ def load_csv(raw: bytes, limits: Limits, filename: str | None = None) -> LoadedD
     if not raw:
         raise DatasetError("empty_file", "The file is empty.")
     _check_format(raw, filename)
-    header, n_rows = _validate_structure(raw, limits)
+    header, n_rows = _validate_structure(raw, limits, options)
 
     try:
         frame = pd.read_csv(
-            io.BytesIO(raw), encoding="utf-8-sig", low_memory=False, skip_blank_lines=True
+            io.BytesIO(raw),
+            sep=options.separator,
+            encoding=options.codec,
+            na_values=list(options.missing_values),
+            keep_default_na=True,
+            low_memory=False,
+            skip_blank_lines=True,
         )
     except (pd.errors.ParserError, ValueError, OverflowError):
         raise DatasetError("malformed_csv", "The file could not be parsed as CSV.") from None
@@ -167,14 +269,17 @@ def load_csv(raw: bytes, limits: Limits, filename: str | None = None) -> LoadedD
         filename=sanitize_filename(filename),
         size_bytes=len(raw),
         sha256=hashlib.sha256(raw).hexdigest(),
+        options=options,
     )
 
 
-def load_csv_as_text(raw: bytes) -> pd.DataFrame:
+def load_csv_as_text(raw: bytes, options: ParseOptions | None = None) -> pd.DataFrame:
     """Re-read an already validated CSV with every cell kept as its original text."""
+    options = options or ParseOptions()
     return pd.read_csv(
         io.BytesIO(raw),
-        encoding="utf-8-sig",
+        sep=options.separator,
+        encoding=options.codec,
         dtype=str,
         keep_default_na=False,
         na_filter=False,

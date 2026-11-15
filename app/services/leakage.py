@@ -154,6 +154,7 @@ def _info(dataset: LoadedDataset) -> DatasetInfo:
         sha256=dataset.sha256,
         n_rows=len(dataset.frame),
         n_columns=dataset.frame.shape[1],
+        parsing=dataset.options.info(),
     )
 
 

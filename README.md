@@ -65,7 +65,7 @@ number. Instead it reports each category separately and says which checks did no
 
 | Area | What you get |
 |---|---|
-| **Validation** | Safe in-memory CSV parsing with size, row and column limits; empty, duplicate and malformed headers caught before pandas silently renames them |
+| **Validation** | Safe in-memory CSV parsing with size, row and column limits; empty, duplicate and malformed headers caught before pandas silently renames them; comma, semicolon, tab or pipe delimiters, UTF-8 or Latin-1, and your own missing-value tokens (such as `?` or `-999`) |
 | **Profiling** | Inferred types, missing values, exact duplicate rows, numeric statistics with IQR outlier candidates, category frequencies and rare categories |
 | **Column quality** | Constant and near-constant columns, identifier-like and high-cardinality columns, identical columns, near-perfectly correlated numeric pairs |
 | **Consistency** | Numbers stored as text, category variants that differ only in case or spacing, stray whitespace, infinite values |
@@ -265,6 +265,15 @@ not in a standard location, and `PYTHON` to use an interpreter other than the re
 All uploads are `multipart/form-data`. Options are form fields rather than query parameters, so
 column names do not appear in access logs.
 
+Every endpoint that takes a file also accepts three optional **parsing fields**. The options used
+are echoed in each result as `dataset.parsing`, so a result records how its file was read.
+
+| Field | Values | Default |
+|---|---|---|
+| `delimiter` | `comma`, `semicolon`, `tab`, `pipe` | `comma` |
+| `encoding` | `utf-8` (a byte-order mark is accepted), `latin-1` | `utf-8` |
+| `missing_values` | Comma-separated extra tokens, for example `?,-999,unknown`. Up to 20 tokens of at most 32 characters, with no control characters | none |
+
 | Method | Path | Form fields | Returns |
 |---|---|---|---|
 | GET | `/api/health` | none | Status, version and active limits |
@@ -276,14 +285,19 @@ column names do not appear in access logs.
 
 ```powershell
 curl.exe -F "file=@sample_data/customer_churn.csv" -F "target_column=churned" http://127.0.0.1:8000/api/analyze
+curl.exe -F "file=@export.csv" -F "delimiter=semicolon" -F "encoding=latin-1" -F "missing_values=?,-999" http://127.0.0.1:8000/api/analyze
 ```
+
+`/api/train-test-overlap` reads both files with the same parsing options. A corrected copy from
+`/api/corrections/apply` is always written as comma-separated UTF-8.
 
 Errors always have the shape `{"error": "<stable_code>", "message": "<safe text>"}`, with status
 400 (malformed request), 413 (size, row or column limit), 415 (not CSV / not multipart), 422
 (invalid content or options), 500 (unexpected; no details) or 503 (server busy). Example codes:
 `empty_file`, `no_data_rows`, `invalid_encoding`, `malformed_csv`, `empty_header`,
 `duplicate_header`, `too_many_rows`, `too_many_columns`, `file_too_large`, `unsupported_format`,
-`unknown_target_column`, `approval_required`, `invalid_plan`.
+`unknown_target_column`, `approval_required`, `invalid_plan`, `invalid_request` (for example an
+unknown delimiter or encoding).
 
 <details>
 <summary><b>Analysis result structure</b></summary>
@@ -318,11 +332,14 @@ category values are omitted unless you opt in with *Include category values* /
 Every threshold is a named constant in the module that uses it, and the same list is embedded in
 each report's *Methodology* section.
 
-**Input rules.** UTF-8 CSV (a byte-order mark is accepted) with a header row, comma separator and
-standard double-quote quoting. Column names must be non-empty and unique. Every row must have as
-many fields as the header; blank lines are skipped, and single fields larger than 128 KB are
-rejected. Empty cells and pandas' default tokens (`NA`, `N/A`, `null`, `NaN`, `None`, and similar)
-are treated as missing. Excel, PDF, archives and binary files are rejected with a message.
+**Input rules.** CSV with a header row and standard double-quote quoting. The delimiter is comma
+(default), semicolon, tab or pipe, and the encoding is UTF-8 (default; a byte-order mark is
+accepted) or Latin-1; both are chosen explicitly, never guessed. Column names must be non-empty and
+unique. Every row must have as many fields as the header; blank lines are skipped, and single
+fields larger than 128 KB are rejected. Empty cells and pandas' default tokens (`NA`, `N/A`,
+`null`, `NaN`, `None`, and similar) are treated as missing, plus up to 20 user-supplied tokens of
+at most 32 characters, matched against whole cells exactly (` ?` with a leading space does not
+match `?`). Excel, PDF, archives and binary files are rejected with a message.
 
 <details>
 <summary><b>Thresholds and methods for every check</b></summary>
@@ -421,7 +438,9 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 
 ## Limitations
 
-- CSV only: comma-separated, UTF-8. Other delimiters and encodings are rejected rather than guessed.
+- CSV only. Delimiter and encoding are chosen by you from a fixed list (comma, semicolon, tab or
+  pipe; UTF-8 or Latin-1) and never detected automatically: a semicolon file read as comma-separated
+  loads as a single column.
 - Only exact duplicates and exact train/test matches are detected, not near-duplicates or related
   records (for example the same customer at two dates).
 - Datetime recognition is ISO 8601 only. Booleans are recognized as `true`/`false`, not `yes`/`no`.
@@ -443,7 +462,6 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
   controlled label noise) with a fixed baseline, an isolated test set and multiple seeds.
 - Group-aware and temporal train/test checks using an entity or time column chosen by the user.
 - Near-duplicate detection (normalized text, numeric tolerance).
-- Configurable missing-value tokens, delimiter and encoding.
 - Optional Cleanlab integration for label issues, once its dependency footprint is justified.
 - Frontend unit tests and an automated browser test in CI.
 

@@ -202,6 +202,19 @@ input[type="search"].input { flex: 1 1 220px; }
 .samples { display: grid; gap: 8px; }
 .samples-label { font-size: 12.5px; color: var(--text-3); }
 .samples-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.parse-options { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.parse-options > summary {
+  cursor: pointer; padding: 9px 12px; font-size: 13px; font-weight: 550; color: var(--text-2);
+  border-radius: var(--radius-sm);
+}
+.parse-options > summary:hover { color: var(--text); }
+.parse-options[open] > summary { border-bottom: 1px solid var(--line); border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+.parse-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px; }
+.parse-grid .field { display: grid; gap: 6px; min-width: 0; }
+.parse-grid .field-label { margin-bottom: 0; font-size: 13px; }
+.parse-grid .field-wide { grid-column: 1 / -1; }
+.parse-grid .input { width: 100%; }
+@media (max-width: 480px) { .parse-grid { grid-template-columns: minmax(0, 1fr); } }
 .privacy-note { font-size: 12.5px; color: var(--text-3); border-top: 1px solid var(--line); padding-top: 14px; }
 
 .progress-block { display: grid; gap: 6px; }

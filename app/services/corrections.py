@@ -116,7 +116,7 @@ def apply_corrections(raw: bytes, dataset: LoadedDataset, plan: CorrectionPlan) 
         raise DatasetError("invalid_plan", "Each correction may appear only once in a plan.")
 
     parsed = dataset.frame
-    text = load_csv_as_text(raw)
+    text = load_csv_as_text(raw, dataset.options)
     if text.shape != parsed.shape:
         raise DatasetError("malformed_csv", "The file's CSV structure is ambiguous.")
 
@@ -186,7 +186,8 @@ def apply_corrections(raw: bytes, dataset: LoadedDataset, plan: CorrectionPlan) 
         notes=[
             "The uploaded file was not modified; this is a corrected copy.",
             "Cell text is preserved exactly; the file is re-quoted where CSV syntax requires it "
-            "and written as UTF-8 without a byte-order mark.",
+            "and written as comma-separated UTF-8 without a byte-order mark, whatever the input "
+            "delimiter and encoding were.",
             "Steps run in a fixed order: rows without a target, duplicate rows, then columns. "
             "Duplicates are identified using all original columns.",
         ],

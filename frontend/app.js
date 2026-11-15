@@ -156,11 +156,41 @@ async function post(path, form) {
   return response;
 }
 
+// Parsing options. Follow-up requests reuse the options echoed in the current result, so every
+// request about a dataset reads it the same way, whatever the controls show now.
+const DEFAULT_PARSING = { delimiter: "comma", encoding: "utf-8", missing_values: [] };
+const ENCODING_TEXT = { "utf-8": "UTF-8", "latin-1": "Latin-1" };
+
+function parsingFromControls() {
+  return {
+    delimiter: $("opt-delimiter").value,
+    encoding: $("opt-encoding").value,
+    missing_values: $("opt-missing").value.split(",").map((t) => t.trim()).filter(Boolean),
+  };
+}
+
+function appendParsing(form, parsing) {
+  form.append("delimiter", parsing.delimiter);
+  form.append("encoding", parsing.encoding);
+  if (parsing.missing_values.length) form.append("missing_values", parsing.missing_values.join(","));
+  return form;
+}
+
+// Only non-default options are worth showing next to the file name.
+function parsingSummary(parsing) {
+  const parts = [];
+  if (parsing.delimiter !== "comma") parts.push(`${parsing.delimiter}-delimited`);
+  if (parsing.encoding !== "utf-8") parts.push(ENCODING_TEXT[parsing.encoding] || parsing.encoding);
+  if (parsing.missing_values.length) parts.push(`missing: ${parsing.missing_values.join(", ")}`);
+  return parts.join(" · ");
+}
+
 function baseForm(extra) {
   const form = new FormData();
   form.append("file", state.file, state.file.name);
   const target = state.result?.settings.target_column;
   if (target) form.append("target_column", target);
+  appendParsing(form, state.result?.dataset.parsing || DEFAULT_PARSING);
   for (const [k, v] of Object.entries(extra || {})) form.set(k, v);
   return form;
 }
@@ -205,7 +235,7 @@ function validateLocally(file) {
   return null;
 }
 
-async function startAnalysis(file, { target = null, sample = null } = {}) {
+async function startAnalysis(file, { target = null, sample = null, parsing = parsingFromControls() } = {}) {
   if (state.busy) return;
   $("upload-error").hidden = true;
   const problem = validateLocally(file);
@@ -216,6 +246,7 @@ async function startAnalysis(file, { target = null, sample = null } = {}) {
   const form = new FormData();
   form.append("file", file, file.name);
   if (target) form.append("target_column", target);
+  appendParsing(form, parsing);
   setUploadBusy(true, "Uploading…");
   const fill = $("progress-fill");
   fill.classList.remove("is-indeterminate");
@@ -238,6 +269,8 @@ async function startAnalysis(file, { target = null, sample = null } = {}) {
     showDashboard(result);
   } catch (err) {
     showUploadError(err);
+    // Point at the controls that can fix these errors.
+    if (err.code === "invalid_encoding" || err.code === "invalid_request") $("parse-options").open = true;
   } finally {
     setUploadBusy(false);
     $("file-input").value = "";
@@ -249,7 +282,7 @@ async function loadSample(name, target) {
     const response = await fetch(`/samples/${encodeURIComponent(name)}`);
     if (!response.ok) throw new ApiError("The sample file could not be loaded.");
     const blob = await response.blob();
-    await startAnalysis(new File([blob], name, { type: "text/csv" }), { target, sample: name });
+    await startAnalysis(new File([blob], name, { type: "text/csv" }), { target, sample: name, parsing: DEFAULT_PARSING });
   } catch (err) {
     showUploadError(err instanceof ApiError ? err : new ApiError("The sample file could not be loaded."));
   }
@@ -275,6 +308,7 @@ async function rerun(target) {
   const form = new FormData();
   form.append("file", state.file, state.file.name);
   if (target) form.append("target_column", target);
+  appendParsing(form, state.result.dataset.parsing);
   try {
     const result = await (await post("/api/analyze", form)).json();
     showDashboard(result, { keepTab: true });
@@ -331,7 +365,8 @@ function renderFileBar(r) {
   $("file-name").textContent = r.dataset.filename;
   $("file-meta").textContent =
     `${fmtInt(r.dataset.n_rows)} rows · ${fmtInt(r.dataset.n_columns)} columns · ` +
-    `${fmtBytes(r.dataset.size_bytes)} · SHA-256 ${r.dataset.sha256.slice(0, 12)}…`;
+    `${fmtBytes(r.dataset.size_bytes)} · SHA-256 ${r.dataset.sha256.slice(0, 12)}…` +
+    (parsingSummary(r.dataset.parsing) ? ` · ${parsingSummary(r.dataset.parsing)}` : "");
   const banner = $("partial-banner");
   const failed = r.stages.filter((s) => s.status !== "completed");
   banner.hidden = r.status === "complete";
@@ -837,6 +872,7 @@ async function runOverlap(testFile) {
   form.append("test_file", testFile, testFile.name);
   const target = state.result.settings.target_column;
   if (target) form.append("target_column", target);
+  appendParsing(form, state.result.dataset.parsing);
   setDashboardBusy(true);
   try {
     const res = await (await post("/api/train-test-overlap", form)).json();
@@ -961,6 +997,8 @@ async function startCorrectedAnalysis(file) {
   const form = new FormData();
   form.append("file", file, file.name);
   if (target) form.append("target_column", target);
+  // The corrected copy is always comma-separated UTF-8; the same missing-value tokens still apply.
+  appendParsing(form, { ...DEFAULT_PARSING, missing_values: state.result.dataset.parsing.missing_values });
   try {
     const result = await (await post("/api/analyze", form)).json();
     state.file = file;
@@ -1091,7 +1129,7 @@ async function loadHealth() {
     $("api-status").textContent = `Local server · v${body.version}`;
     $("api-status").dataset.state = "ok";
     $("upload-hint").textContent =
-      `UTF-8 CSV with a header row · up to ${fmtBytes(body.limits.max_upload_bytes)}, ` +
+      `CSV with a header row · up to ${fmtBytes(body.limits.max_upload_bytes)}, ` +
       `${fmtInt(body.limits.max_rows)} rows and ${fmtInt(body.limits.max_columns)} columns.`;
   } catch {
     $("api-status").textContent = "Server unreachable";

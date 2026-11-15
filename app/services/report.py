@@ -13,6 +13,7 @@ from app.config import APP_VERSION
 from app.models.schemas import AnalysisResult, ColumnProfile, Finding, ReportDocument, ReportMetadata
 from app.services import findings as F
 from app.services import leakage as L
+from app.services import loader as D
 from app.services import profiler as P
 from app.services import target as T
 
@@ -28,6 +29,12 @@ PRIVACY_NOTE = (
 )
 
 METHODOLOGY = [
+    f"Parsing: delimiter one of {', '.join(D.DELIMITERS)} (default comma); encoding UTF-8 (a "
+    "byte-order mark is accepted) or Latin-1. Missing values are empty cells and the parser's "
+    "standard tokens (such as NA, N/A, null and NaN), plus up to "
+    f"{D.MAX_MISSING_VALUE_TOKENS} user-supplied tokens of at most "
+    f"{D.MAX_MISSING_VALUE_TOKEN_LENGTH} characters, matched against whole cells exactly. The "
+    "options used are recorded with the dataset.",
     f"Types: numeric and boolean types come from the CSV parser; text columns whose values are all "
     f"'true'/'false' are boolean, all ISO 8601 dates are datetime, at most "
     f"{P.CATEGORICAL_MAX_UNIQUE} distinct values (or a distinct ratio of at most "
@@ -214,6 +221,9 @@ def render_html(doc: ReportDocument) -> str:
         f"<p class='status'>{_e(s.headline)}</p>",
         f"<p>Analysis status: <b>{_e(a.status)}</b>. Overall: <b>{_e(s.status.replace('_', ' '))}</b>."
         f" Target column: <b>{_e(a.settings.target_column or 'none selected')}</b>.</p>",
+        f"<p class='muted'>Read as {_e(a.dataset.parsing.encoding)}, "
+        f"{_e(a.dataset.parsing.delimiter)}-delimited. Extra missing-value tokens: "
+        f"{_e(', '.join(a.dataset.parsing.missing_values) or 'none')}.</p>",
         "<table><tr><th>Category</th><th>Status</th><th class='num'>Findings</th></tr>",
         *(
             f"<tr><td>{_e(c.category.value.replace('_', ' '))}</td><td>{_e(c.status.replace('_', ' '))}"

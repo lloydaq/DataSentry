@@ -61,7 +61,7 @@
           </span>
           <div class="dropzone-copy">
             <p class="dropzone-title"><strong>Drop a CSV file here</strong></p>
-            <p id="upload-hint" class="hint">UTF-8 CSV with a header row.</p>
+            <p id="upload-hint" class="hint">CSV with a header row.</p>
           </div>
           <span class="dropzone-key" aria-hidden="true">Browse files</span>
           <input type="file" id="file-input" accept=".csv,text/csv" hidden>
@@ -76,6 +76,34 @@
         </div>
 
         <div id="upload-error" class="alert alert-error" role="alert" hidden></div>
+
+        <details id="parse-options" class="parse-options">
+          <summary>Parsing options</summary>
+          <div class="parse-grid">
+            <label class="field">
+              <span class="field-label">Delimiter</span>
+              <select id="opt-delimiter" class="input">
+                <option value="comma" selected>Comma ( , )</option>
+                <option value="semicolon">Semicolon ( ; )</option>
+                <option value="tab">Tab</option>
+                <option value="pipe">Pipe ( | )</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Encoding</span>
+              <select id="opt-encoding" class="input">
+                <option value="utf-8" selected>UTF-8</option>
+                <option value="latin-1">Latin-1 (older Excel exports)</option>
+              </select>
+            </label>
+            <label class="field field-wide">
+              <span class="field-label">Extra missing-value tokens</span>
+              <input type="text" id="opt-missing" class="input" maxlength="700" spellcheck="false" autocomplete="off"
+                     placeholder="e.g. ?, -999, unknown" aria-describedby="opt-missing-hint">
+              <span id="opt-missing-hint" class="hint">Comma-separated and matched against whole cells. Empty cells, NA, N/A and null always count as missing.</span>
+            </label>
+          </div>
+        </details>
 
         <div class="samples">
           <span class="samples-label">Or try a synthetic sample</span>
