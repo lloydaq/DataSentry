@@ -15,12 +15,13 @@ informed corrections before model training.
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-00638E?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-0f1b3d?logo=fastapi&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-profiling-0f1b3d?logo=pandas&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-label%20review-0f1b3d?logo=scikitlearn&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML%20checks-0f1b3d?logo=scikitlearn&logoColor=white)
+[![CI](https://github.com/lloydaq/DataSentry/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/lloydaq/DataSentry/actions/workflows/ci.yml)
 ![Tested with pytest](https://img.shields.io/badge/tested%20with-pytest-0f1b3d?logo=pytest&logoColor=white)
 ![Runs locally](https://img.shields.io/badge/runs-locally%2C%20no%20cloud-00638E)
 [![License: MIT](https://img.shields.io/badge/license-MIT-00638E)](LICENSE)
 
-[Quick start](#quick-start) · [Capabilities](#key-capabilities) · [How it works](#how-it-works) · [API](#api-reference) · [Methodology](#diagnostic-methodology) · [Security](#security-and-privacy)
+[Quick start](#quick-start) · [Capabilities](#key-capabilities) · [How it works](#how-it-works) · [CLI](#command-line-quality-gate) · [API](#api-reference) · [Methodology](#diagnostic-methodology) · [Security](#security-and-privacy)
 
 </div>
 
@@ -82,8 +83,9 @@ number. Instead it reports each category separately and says which checks did no
 | **Review log** | Mark each finding *acknowledged*, *accepted risk* or *fixed upstream* with a short note; decisions stay in your browser tab, travel inside the exported JSON and HTML reports, and can be imported back from a JSON report. Nothing is stored on the server |
 | **Model impact (opt-in)** | Measures what problems cost a model on this dataset: the label-review model is trained with and without the features the leakage screen flagged, with and without copies of test rows in training, and with 5%, 10% and 20% of training labels flipped, each scored on the same held-out test set for five fixed seeds; per-seed scores, mean and spread, reproducible run to run |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
-| **Reports** | Strict JSON and a self-contained, script-free HTML report |
-| **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
+| **Reports** | Strict JSON and a self-contained, script-free HTML report, including any review decisions |
+| **Command line** | `python -m app.cli check` runs the same analysis without a server and fails a CI step when findings reach a threshold you choose |
+| **Interface** | Drag-and-drop upload, filterable findings, column explorer, tabs for ML checks, version comparison, contracts and corrections, light / dark / system themes, keyboard support, responsive layout that uses wide screens |
 
 <table>
   <tr>
@@ -117,7 +119,7 @@ number. Instead it reports each category separately and says which checks did no
 </p>
 
 The services in `app/services/` are plain Python with no web framework imports, so every diagnostic
-can be tested without HTTP. A request flows as `routes.py` (byte-capped upload) → `loader.load_csv`
+can be tested without HTTP, and the command-line gate (`app/cli.py`) reuses them without a server. A request flows as `routes.py` (byte-capped upload) → `loader.load_csv`
 (validation) → `analysis.run_analysis` (profiling, target and findings stages) → a Pydantic
 `AnalysisResult`. If one stage fails, the result is marked `partial` and names the missing checks
 instead of pretending the analysis was complete.
@@ -135,21 +137,31 @@ app/
   models/
     schemas.py         Pydantic response contracts (strict JSON: no NaN/Infinity)
   services/            Pure Python; no FastAPI imports
-    loader.py          CSV validation and parsing; DatasetError for expected, user-safe failures
-    profiler.py        Types, missing values, duplicates, numeric/categorical stats, redundancy
+    loader.py          CSV validation and parsing options; DatasetError for user-safe failures
+    profiler.py        Types, missing values, exact and near-duplicates, stats, redundancy
     target.py          Target task inference, class distribution, label conflicts
-    leakage.py         Target-leakage screen and train/test overlap
+    leakage.py         Target-leakage screen; train/test overlap with entity and time checks
     findings.py        Rules that turn observations into findings; qualitative summary
     analysis.py        Orchestrates stages; a failing stage marks the result "partial"
-    label_review.py    Opt-in cross-validated label review (scikit-learn)
+    splits.py          Split Doctor: split-strategy advice from target, entity and time columns
+    diff.py            Dataset diff between two versions (schema, rows, KS/PSI shift, findings)
+    contract.py        Data contracts: export, strict parsing, per-value checks
+    datasheet.py       Datasheet draft with source paths; person-only questions left empty
+    modeling.py        The shared baseline model (feature selection, leak-free pipeline)
+    label_review.py    Opt-in cross-validated label review; optional Cleanlab
+    experiments.py     Opt-in model-impact experiments (leakage, duplicates, label noise)
     corrections.py     Proposed corrections and approved, audited application
-    report.py          JSON report document and escaped HTML rendering
+    report.py          JSON report document, review decisions and escaped HTML rendering
+  cli.py               Command-line quality gate (exit codes 0/1/2/3)
 frontend/              index.html, style.css, app.js, theme.js (no build step)
 sample_data/           Synthetic demo datasets (see sample_data/README.md)
 scripts/               generate_sample_data.py (deterministic, seed 42)
-tests/                 pytest suite (unit, API integration, security boundaries, determinism)
+tests/                 pytest suite, Node frontend unit tests (tests/frontend), browser smoke test (tests/e2e)
 docs/                  README artwork and screenshots
 reports/               Reserved for report artifacts (nothing is written here automatically)
+requirements.txt       Pinned runtime and test dependencies
+requirements-optional.txt  Optional extras (Cleanlab); never required
+.github/workflows/     CI: tests without the extras, then with them
 ```
 
 </details>
@@ -196,8 +208,8 @@ probabilities that a problem exists.
 ## Quick start
 
 **Prerequisites:** Python 3.12 or newer (the pinned NumPy 2.5.4 requires it; development and
-testing used Python 3.14.4 on Windows 11), and a modern browser. Node.js is optional, only for the
-JavaScript syntax checks.
+testing used Python 3.14.4 on Windows 11), and a modern browser. Node.js 22 or newer is optional,
+only for the frontend tests.
 
 ```powershell
 # Windows PowerShell, from the repository root
@@ -228,11 +240,17 @@ UI loads its assets from a CDN; DataSentry itself does not).
    why `cancellation_code` looks like leakage, and why that is not proof.
 3. Click a column chip such as `age` to open its distribution, outlier candidates and related
    findings.
-4. On **ML checks**, run **Label review**, then **Use sample holdout** to find the 20 holdout rows
-   copied from the training file.
-5. On **Corrections**, select changes, read their implications, tick the approval box and apply.
+4. Expand a finding and record **Your decision** (for example *accepted risk* with a note). The
+   decision travels with the reports you download and can be imported back later.
+5. On **ML checks**, run **Label review**, then **Use sample holdout** to find the 20 holdout rows
+   copied from the training file. In **Split Doctor**, choose `customer_id` and `signup_date` for
+   split advice; run **Model impact** to see what `cancellation_code` and the duplicates do to a
+   model's score.
+6. On **Compare versions**, click **Use sample holdout** to compare two exports; on **Contract**,
+   download a contract and check a file against it.
+7. On **Corrections**, select changes, read their implications, tick the approval box and apply.
    Download the corrected CSV and its audit record, or analyze the corrected copy.
-6. Download the HTML or JSON report.
+8. Download the HTML or JSON report, or a **Datasheet draft** to start the dataset's documentation.
 
 The planted issues are listed in [`sample_data/README.md`](sample_data/README.md). Regenerate the
 samples with `python scripts/generate_sample_data.py`; the output is byte-for-byte reproducible.
@@ -256,6 +274,13 @@ inline styles. Leave it unset in normal use.
 
 Indicative timings from one development machine: a 7.4 MB file with 200,000 rows and 7 columns
 loads in about 0.2 s and is analyzed in about 3 s; label review on 20,000 rows takes about 1 s.
+
+### Hosting
+
+DataSentry is a local application: the analysis runs in the Python server, so it needs `uvicorn`
+(or another Python host) and cannot run on a static host such as GitHub Pages. It has no
+authentication and accepts uploads, so keep it bound to `127.0.0.1` as shown; exposing it on a
+network or the internet is not a supported deployment.
 
 ## Running tests
 
@@ -599,9 +624,31 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 
 ## Roadmap
 
-Every phase in [PHASES.md](PHASES.md) is complete. Open ideas, none of them started: fuzzy
-(typo-tolerant) duplicate matching, regression targets for model-impact experiments, and formats
-other than CSV.
+**Status:** all twelve planned phases (0–11) in [PHASES.md](PHASES.md) are complete, tested and
+merged, and CI is green on `main`.
+
+**Proposed next phases** (none started; details and "done when" criteria in
+[PHASES.md](PHASES.md#proposed-next-phases)):
+
+- **Re-identification risk screen.** Find combinations of ordinary columns (such as postcode, birth
+  date and gender) that single out individual rows before a dataset is shared, with uniqueness
+  rates as evidence.
+- **Detector self-test.** Plant known problems into a copy of *your* dataset and measure which ones
+  DataSentry actually catches, so you know how far to trust a clean result on data shaped like
+  yours.
+- **Evidence notebook export.** A Jupyter notebook that reproduces every finding from the raw CSV
+  with plain pandas and the documented thresholds, so a reviewer can verify results without
+  DataSentry.
+- **Source audit.** Given a source column (annotator, site, device, batch), compare missing
+  values, label rates and label-review disagreement per source to tell systematic problems from
+  random noise.
+- **Is more data worth it?** A seeded learning curve (10% to 100% of the training rows) showing
+  whether the baseline model is still improving, measured on this dataset.
+- **Split Lab.** Move a date cut-off or regroup entities interactively and watch train/test
+  leakage, class balance and size update before committing to a split.
+
+Smaller open ideas: fuzzy (typo-tolerant) duplicate matching, regression targets for model-impact
+experiments, and formats other than CSV.
 
 ## Contributing
 
