@@ -11,6 +11,7 @@ from html import escape
 
 from app.config import APP_VERSION
 from app.models.schemas import AnalysisResult, ColumnProfile, Finding, ReportDocument, ReportMetadata
+from app.services import diff as Dd
 from app.services import findings as F
 from app.services import leakage as L
 from app.services import loader as D
@@ -85,6 +86,15 @@ METHODOLOGY = [
     f"each side needing {S.TIME_SHIFT_MIN_ROWS} rows. Across two files, test rows sharing an "
     "entity with training, or dated before the newest training row, are potential issues "
     f"(medium severity from {L.OVERLAP_MEDIUM_FRACTION:.0%} of test rows).",
+    "Dataset diff (opt-in): numeric columns are compared with the two-sample Kolmogorov-Smirnov "
+    f"statistic (shifted from {Dd.KS_SHIFT_THRESHOLD}, medium severity from "
+    f"{Dd.KS_MAJOR_THRESHOLD}), categorical and boolean columns with the population stability index "
+    f"(shares floored at {Dd.PSI_FLOOR}; shifted from {Dd.PSI_SHIFT_THRESHOLD}, medium from "
+    f"{Dd.PSI_MAJOR_THRESHOLD}), each version needing {Dd.SHIFT_MIN_VALUES} values. Missing-value "
+    f"increases of at least {Dd.MISSING_INCREASE_THRESHOLD:.0%} (medium from "
+    f"{Dd.MISSING_INCREASE_MAJOR:.0%}) are reported. A removed and an added column of the same type "
+    f"whose distinct values overlap by at least {Dd.RENAME_MIN_OVERLAP} (Jaccard) are a possible "
+    "rename. Findings are matched by code and columns as new, resolved or persisting.",
     "Summary: no numeric score. A category is 'issue' if it has a likely or potential problem of "
     "high or medium severity, 'review' for lower-severity problems or inconclusive checks, "
     "'pass' when only observations remain, and 'not_evaluated' when its checks did not run.",

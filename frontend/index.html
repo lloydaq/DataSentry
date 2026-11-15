@@ -164,6 +164,7 @@
         <button type="button" role="tab" id="tab-duplicates" aria-controls="panel-duplicates" aria-selected="false" tabindex="-1">Duplicates &amp; redundancy</button>
         <button type="button" role="tab" id="tab-target" aria-controls="panel-target" aria-selected="false" tabindex="-1">Target</button>
         <button type="button" role="tab" id="tab-ml" aria-controls="panel-ml" aria-selected="false" tabindex="-1">ML checks</button>
+        <button type="button" role="tab" id="tab-compare" aria-controls="panel-compare" aria-selected="false" tabindex="-1">Compare versions</button>
         <button type="button" role="tab" id="tab-corrections" aria-controls="panel-corrections" aria-selected="false" tabindex="-1">Corrections <span class="tab-count" id="count-corrections"></span></button>
       </div>
 
@@ -259,6 +260,20 @@
             <div id="split-results" aria-live="polite"></div>
           </div>
         </div>
+      </section>
+
+      <section id="panel-compare" class="tab-panel" role="tabpanel" aria-labelledby="tab-compare" hidden>
+        <div class="card compare-intro">
+          <h2 class="card-title">Compare with a previous version</h2>
+          <p class="small">Treats the current file as the new version and compares it with an earlier export of the same dataset: columns added, removed, possibly renamed or retyped; rows kept, added and dropped; missing values and distributions per column; and which findings are new, resolved or still present.</p>
+          <p class="small muted">Shift statistics are effect sizes (Kolmogorov–Smirnov for numbers, population stability index for categories), not significance tests. A shift can be expected, for example a new season or market.</p>
+          <div class="toolbar">
+            <label class="btn" for="previous-file-input">Choose previous version…</label>
+            <input type="file" id="previous-file-input" accept=".csv,text/csv" class="visually-hidden">
+            <button type="button" class="btn btn-small" id="sample-previous">Use sample holdout</button>
+          </div>
+        </div>
+        <div id="compare-results" aria-live="polite"></div>
       </section>
 
       <section id="panel-corrections" class="tab-panel" role="tabpanel" aria-labelledby="tab-corrections" hidden>

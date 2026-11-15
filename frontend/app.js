@@ -299,6 +299,7 @@ function resetToUpload() {
   clear($("label-review-results"));
   clear($("overlap-results"));
   clear($("split-results"));
+  clear($("compare-results"));
   window.scrollTo(0, 0);
   $("dropzone").focus();
 }
@@ -344,6 +345,7 @@ function showDashboard(result, { keepTab = false } = {}) {
   clear($("label-review-results"));
   clear($("overlap-results"));
   clear($("split-results"));
+  clear($("compare-results"));
   renderFileBar(result);
   renderSummary(result);
   renderOverview(result);
@@ -812,6 +814,7 @@ function renderMl() {
     ? `Uses up to ${fmtInt(state.limits?.max_label_review_rows || 0)} rows. Runs only when you click.`
     : "Select a classification target on the Target tab first.";
   $("sample-holdout").hidden = state.sample !== "customer_churn.csv";
+  $("sample-previous").hidden = state.sample !== "customer_churn.csv";
   const target = state.result.settings.target_column;
   fillColumnSelect($("split-entity"), target);
   fillColumnSelect($("split-time"), target);
@@ -956,6 +959,90 @@ async function runOverlap(testFile) {
   } finally {
     setDashboardBusy(false);
     $("test-file-input").value = "";
+  }
+}
+
+// --- Compare versions ----------------------------------------------------------------------
+
+const MEASURE_TEXT = { ks: "KS", psi: "PSI" };
+
+function refList(title, refs) {
+  return h("div", { class: "compare-refs" },
+    h("h3", { class: "compare-subtitle", text: `${title} (${refs.length})` }),
+    refs.length
+      ? h("ul", { class: "small" }, refs.map((r) => h("li", {},
+        severityPill(r.severity), " ", r.title, r.columns.length ? ` · ${r.columns.join(", ")}` : "")))
+      : h("p", { class: "small muted", text: "None" }));
+}
+
+function renderCompare(out, res) {
+  const s = res.schema_changes;
+  const r = res.rows;
+  const compared = res.columns.filter((c) => c.shift_statistic !== null || c.old_missing_fraction !== c.new_missing_fraction || c.n_new_categories || c.n_vanished_categories)
+    .sort((a, b) => Number(b.shifted) - Number(a.shifted) || (b.shift_statistic ?? -1) - (a.shift_statistic ?? -1) || a.column.localeCompare(b.column));
+  const schemaLines = [
+    s.added.length ? h("li", {}, h("b", { text: "Added: " }), s.added.join(", ")) : null,
+    s.removed.length ? h("li", {}, h("b", { text: "Removed: " }), s.removed.join(", ")) : null,
+    s.possible_renames.map((x) => h("li", {}, h("b", { text: "Possibly renamed: " }), `${x.old_name} → ${x.new_name} (values overlap ${fmtPct(x.value_overlap, 0)})`)),
+    s.type_changes.map((t) => h("li", {}, h("b", { text: "Type changed: " }), `${t.column} (${t.old_type} → ${t.new_type})`)),
+  ].flat().filter(Boolean);
+  put(clear(out),
+    h("div", { class: "card" },
+      h("p", { class: "summary-headline", text: res.headline }),
+      h("p", { class: "small muted", text: `Previous: ${res.old.filename} · current: ${res.new.filename}` }),
+      h("div", { class: "kv-grid" },
+        kv("Rows", `${fmtInt(r.n_old)} → ${fmtInt(r.n_new)}`),
+        kv("New rows", fmtInt(r.n_new_rows_not_in_old)),
+        kv("Dropped rows", fmtInt(r.n_old_rows_not_in_new)),
+        kv("Unchanged rows", fmtInt(r.n_new_rows_found_in_old)),
+        kv("Columns compared", fmtInt(r.n_columns_compared))),
+      schemaLines.length ? h("ul", { class: "small compare-schema" }, schemaLines) : null),
+    res.findings.length ? h("div", { class: "findings-list" }, res.findings.map((f, i) => findingCard(f, `diff-${i}`))) : null,
+    compared.length ? h("div", { class: "card" },
+      h("h2", { class: "card-title", text: "Column changes" }),
+      h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
+        h("thead", {}, h("tr", {},
+          h("th", { text: "Column" }), h("th", { text: "Shift" }), h("th", { class: "num", text: "Statistic" }),
+          h("th", { class: "num", text: "Missing" }), h("th", { text: "Categories" }))),
+        h("tbody", {}, compared.map((c) => h("tr", {},
+          h("td", {}, columnChip(c.column)),
+          h("td", { text: c.shift_statistic === null ? (c.note || "—") : c.shifted ? "shifted" : "stable" }),
+          h("td", { class: "num", text: c.shift_statistic === null ? "—" : `${MEASURE_TEXT[c.shift_measure]} ${c.shift_statistic.toFixed(3)}` }),
+          h("td", { class: "num", text: `${fmtPct(c.old_missing_fraction)} → ${fmtPct(c.new_missing_fraction)}` }),
+          h("td", { text: [c.n_new_categories ? `+${c.n_new_categories} new` : "", c.n_vanished_categories ? `−${c.n_vanished_categories} gone` : ""].filter(Boolean).join(", ") || "—" }))))))) : null,
+    res.finding_changes ? h("div", { class: "card compare-findings" },
+      h("h2", { class: "card-title", text: "Findings compared with the previous version" }),
+      refList("New", res.finding_changes.new),
+      refList("Resolved", res.finding_changes.resolved),
+      refList("Still present", res.finding_changes.persisting)) : null,
+    h("details", { class: "split-limits small muted" },
+      h("summary", { text: "Limitations" }),
+      h("ul", {}, res.limitations.map((l) => h("li", { text: l })))));
+}
+
+async function runCompare(previousFile) {
+  if (state.busy) return;
+  const out = clear($("compare-results"));
+  const problem = validateLocally(previousFile);
+  if (problem) {
+    put(out, h("div", { class: "alert alert-error", text: problem }));
+    return;
+  }
+  put(out, h("p", { class: "small muted", text: `Comparing with ${previousFile.name}…` }));
+  const form = new FormData();
+  form.append("old_file", previousFile, previousFile.name);
+  form.append("new_file", state.file, state.file.name);
+  const target = state.result.settings.target_column;
+  if (target) form.append("target_column", target);
+  appendParsing(form, state.result.dataset.parsing);
+  setDashboardBusy(true);
+  try {
+    renderCompare(out, await (await post("/api/dataset-diff", form)).json());
+  } catch (err) {
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
+  } finally {
+    setDashboardBusy(false);
+    $("previous-file-input").value = "";
   }
 }
 
@@ -1217,6 +1304,16 @@ function init() {
   $("run-target").addEventListener("click", () => rerun($("target-select").value || null));
   $("run-label-review").addEventListener("click", runLabelReview);
   $("split-form").addEventListener("submit", runSplitAdvice);
+  $("previous-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runCompare(e.target.files[0]); });
+  $("sample-previous").addEventListener("click", async () => {
+    try {
+      const response = await fetch("/samples/customer_churn_holdout.csv");
+      if (!response.ok) throw new Error();
+      runCompare(new File([await response.blob()], "customer_churn_holdout.csv", { type: "text/csv" }));
+    } catch {
+      toast("The sample file could not be loaded.");
+    }
+  });
   $("test-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runOverlap(e.target.files[0]); });
   $("sample-holdout").addEventListener("click", async () => {
     try {
