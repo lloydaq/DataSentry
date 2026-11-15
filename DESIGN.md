@@ -195,7 +195,7 @@ The tool is the product page. DataSentry is a calm, high-contrast instrument whe
 
 Exactly one surface is branded: the landing hero panel, a static 32px-radius gradient field from Onyx through deep and Dark Azure to Azure Steel, holding the pitch and the upload card. Everything past the upload is the working instrument, flat and hairline-ruled, recoloured in place between a light and a dark theme. The background never moves; motion exists only to explain a change (a panel arriving, a detail opening, a toast confirming), uses opacity and a few pixels of translate, and disappears entirely under reduced motion.
 
-Density is moderate and reading-led: 14.5px body, a 1180px column, cards that breathe at 22px, and tabular numerals wherever values are compared. Dataset strings (column names, values, finding codes) are the only monospace text, so the user's data is always visually distinct from the interface's voice.
+Density is moderate and reading-led: 14.5px body, a page up to 1680px wide, cards that breathe at 22px, and tabular numerals wherever values are compared. Dataset strings (column names, values, finding codes) are the only monospace text, so the user's data is always visually distinct from the interface's voice.
 
 **Key Characteristics:**
 - One branded surface (landing hero panel and brand mark); every working screen is flat and ruled.
@@ -270,7 +270,7 @@ A near-monochrome Onyx and Paper White system with a single azure family; warm a
 
 ## Layout
 
-A single 1180px column centred with 20px gutters (16px on phones), 32px top and 88px bottom padding. The sticky top bar aligns its content to the same column. The landing is one full-width hero panel split 1.1fr / 1fr (pitch left, upload card right) with a 56px gap and 64px/56px padding, collapsing to one column at 900px; on phones the headline and lede lead, the upload card follows immediately, and the capability list moves below it.
+A centred page that uses wide screens: up to `--page-max` (1680px) wide with a viewport-scaled `--gutter` (clamp(20px, 3.5vw, 56px); 16px on phones), 32px top and 88px bottom padding. The sticky top bar aligns its content to the same edges. The landing is one full-width hero panel split into a flexible pitch column and an upload card capped at 580px (minimum 360px), with a clamp(40px, 6vw, 120px) gap and clamp(48px, 5vw, 96px) by clamp(36px, 5vw, 96px) padding; the headline scales up to 76px, collapsing to one column at 900px; on phones the headline and lede lead, the upload card follows immediately, and the capability list moves below it.
 
 The dashboard reads top-down: file bar (name, meta, export actions), a summary row split 1.2fr / 1fr (verdict card, category card), an overview stat strip of six cells (three at 900px, two at 560px), then underline tabs over the active panel. The columns view pairs a table with a sticky detail panel (1.25fr / 1fr), stacking at 900px.
 
