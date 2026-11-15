@@ -632,6 +632,44 @@ class ContractCheckResult(Model):
     limitations: list[str]
 
 
+# --- Datasheet draft -------------------------------------------------------------------------
+
+
+class DatasheetField(Model):
+    """One auto-filled fact. ``source`` is the path of the value in the AnalysisResult JSON;
+    ``group`` names the column a per-column fact belongs to."""
+
+    label: str
+    value: str
+    source: str
+    group: str | None = None
+
+
+class DatasheetQuestion(Model):
+    """A question only a person can answer; ``answer`` is always empty in a generated draft."""
+
+    question: str
+    answer: None = None
+
+
+class DatasheetSection(Model):
+    title: str
+    filled_by: Literal["analysis", "person", "both"]
+    fields: list[DatasheetField] = []
+    questions: list[DatasheetQuestion] = []
+    note: str | None = None
+
+
+class Datasheet(Model):
+    title: str
+    generated_by: str
+    generated_at: str
+    source_filename: str
+    source_sha256: str
+    sections: list[DatasheetSection]
+    disclaimer: str
+
+
 # --- Reports and errors ----------------------------------------------------------------------
 
 

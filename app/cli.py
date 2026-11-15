@@ -23,7 +23,7 @@ from pathlib import Path
 from app.config import APP_VERSION, Limits
 from app.models.schemas import AnalysisResult, ContractCheckResult, Finding, FindingKind, Severity
 from app.services import contract as contracts
-from app.services import report
+from app.services import datasheet, report
 from app.services.analysis import run_analysis
 from app.services.loader import DELIMITERS, ENCODINGS, DatasetError, load_csv, parse_options
 
@@ -82,6 +82,15 @@ def _write_report(result: AnalysisResult, path: Path, include_values: bool) -> N
     path.write_text(body, encoding="utf-8")
 
 
+def _write_datasheet(result: AnalysisResult, path: Path) -> None:
+    suffix = path.suffix.lower()
+    if suffix not in (".md", ".json"):
+        raise UsageError("--datasheet must end in .md or .json.")
+    sheet = datasheet.build_datasheet(result)
+    body = datasheet.render_markdown(sheet) if suffix == ".md" else sheet.model_dump_json(indent=2)
+    path.write_text(body, encoding="utf-8")
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m app.cli",
@@ -112,6 +121,10 @@ def _build_parser() -> argparse.ArgumentParser:
         help="include frequent category values in the report (omitted by default)",
     )
     check.add_argument("--result", type=Path, help="write the raw analysis result (JSON) here")
+    check.add_argument(
+        "--datasheet", type=Path,
+        help="write a datasheet draft here (.md or .json); questions for a person stay empty",
+    )
     check.add_argument("--format", choices=["text", "json"], default="text", help="stdout format")
     parsing = check.add_argument_group("parsing options (with --contract, the contract's own options are used)")
     parsing.add_argument("--delimiter", choices=list(DELIMITERS))
@@ -141,6 +154,8 @@ def _check(args: argparse.Namespace, limits: Limits) -> tuple[int, dict]:
         args.result.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     if args.report is not None:
         _write_report(result, args.report, args.include_values)
+    if args.datasheet is not None:
+        _write_datasheet(result, args.datasheet)
 
     findings = list(result.findings) + (list(checked.findings) if checked else [])
     blocking = gating(findings, args.fail_on, args.min_severity)
@@ -182,6 +197,7 @@ def _check(args: argparse.Namespace, limits: Limits) -> tuple[int, dict]:
         "incomplete_stages": [s.name for s in result.stages if s.status != "completed"],
         "report": str(args.report) if args.report else None,
         "result": str(args.result) if args.result else None,
+        "datasheet": str(args.datasheet) if args.datasheet else None,
     }
     return code, summary
 
@@ -209,7 +225,7 @@ def _print_text(summary: dict) -> None:
         print(f"  - {f['severity']:<6} {f['kind']:<15} {f['code']}: {_safe(f['title'])}{cols}")
     if len(blocking) > GATE_LIST_LIMIT:
         print(f"  ... and {len(blocking) - GATE_LIST_LIMIT} more")
-    for key, label in (("report", "Report"), ("result", "Result")):
+    for key, label in (("report", "Report"), ("result", "Result"), ("datasheet", "Datasheet draft")):
         if summary[key]:
             print(f"{label} written to {_safe(summary[key])}")
 
