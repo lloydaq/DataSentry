@@ -162,7 +162,7 @@ human-only fields are always left blank.
 **Done when:** results are bit-for-bit reproducible across runs, and the planted leakage fixture
 shows the expected score inflation.
 
-## Phase 11 — Optional Cleanlab integration ☐
+## Phase 11 — Optional Cleanlab integration ☑
 
 Only if its dependency footprint is justified against Python ≥ 3.12 support and install size. It
 must be an optional extra, never a hard requirement.

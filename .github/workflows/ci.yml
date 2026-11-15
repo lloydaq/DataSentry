@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            requirements.txt
+            requirements-optional.txt
 
       - uses: actions/setup-node@v4
         with:
@@ -44,3 +46,10 @@ jobs:
 
       - name: Run browser smoke test
         run: node tests/e2e/smoke.mjs
+
+      # The steps above run without optional extras, proving they are never required.
+      - name: Install optional extras
+        run: python -m pip install -r requirements-optional.txt
+
+      - name: Run tests with the optional extras
+        run: python -m pytest tests/test_cleanlab.py

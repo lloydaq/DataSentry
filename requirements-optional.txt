@@ -1,0 +1,8 @@
+# Optional extras: install with
+#   python -m pip install -r requirements-optional.txt
+# DataSentry works without them; features that use them say when they are unavailable.
+
+# Cleanlab: confident-learning label-issue detection in label review (Apache-2.0).
+cleanlab==2.9.0
+tqdm==4.70.1      # cleanlab dependency
+termcolor==3.3.0  # cleanlab dependency

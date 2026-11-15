@@ -415,6 +415,22 @@ class LabelCandidate(Model):
     predicted_label: str
     given_label_probability: float
     predicted_label_probability: float
+    cleanlab_flagged: bool | None = None
+
+
+class CleanlabSummary(Model):
+    """Confident learning (Cleanlab, an optional extra) on the label review's out-of-fold
+    probabilities. ``unavailable`` when the extra is not installed."""
+
+    status: Literal["computed", "unavailable", "failed"]
+    reason: str | None = None
+    version: str | None = None
+    method: str | None = None
+    n_issues: int = 0
+    n_issues_among_candidates: int = 0
+    issue_row_indices: list[int] = Field(
+        default=[], description="Row positions (0-based) of flagged rows, lowest self-confidence first."
+    )
 
 
 class LabelReviewResult(Model):
@@ -435,6 +451,7 @@ class LabelReviewResult(Model):
     candidates: list[LabelCandidate] = []
     candidates_truncated: bool = False
     limitations: list[str] = []
+    cleanlab: CleanlabSummary | None = None
 
 
 class ExperimentCondition(Model):

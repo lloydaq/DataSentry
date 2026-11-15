@@ -1085,6 +1085,18 @@ async function runImpact() {
   }
 }
 
+// Cleanlab is an optional extra: say what it found, or how to add it, never pretend it ran.
+function cleanlabNote(c) {
+  if (!c) return null;
+  if (c.status === "computed") {
+    return h("p", { class: "small" },
+      h("b", { text: "Cleanlab confident learning: " }),
+      `${fmtInt(c.n_issues)} row(s) flagged as likely label issues, ${fmtInt(c.n_issues_among_candidates)} of them among the rows below. `,
+      h("span", { class: "muted", text: `cleanlab ${c.version}, ${c.method}. Flagged is a reason to check a row, not proof.` }));
+  }
+  return h("p", { class: "small muted", text: c.status === "unavailable" ? c.reason : `Cleanlab: ${c.reason}` });
+}
+
 async function runLabelReview() {
   if (state.busy) return;
   const out = clear($("label-review-results"));
@@ -1110,16 +1122,20 @@ async function runLabelReview() {
       h("p", { class: "small muted", text: `${res.model}; ${res.cv_folds}-fold stratified CV, seed ${res.random_seed}. Features used: ${res.features_used.join(", ") || "none"}.` }),
       res.excluded_features.length
         ? h("p", { class: "small muted", text: `Excluded: ${res.excluded_features.map((e) => `${e.column} (${e.reason})`).join("; ")}.` })
-        : null);
+        : null,
+      cleanlabNote(res.cleanlab));
+    const withCleanlab = res.cleanlab?.status === "computed";
     if (res.candidates.length) {
       put(out, h("div", { class: "section-label", text: `Rows to review${res.candidates_truncated ? ` (first ${res.candidates.length})` : ""}` }),
         h("div", { class: "table-wrap" }, h("table", { class: "data-table" },
           h("thead", {}, h("tr", {}, h("th", { class: "num", text: "Row" }), h("th", { text: "Given label" }),
-            h("th", { text: "Model prefers" }), h("th", { class: "num", text: "P(given)" }), h("th", { class: "num", text: "P(preferred)" }))),
+            h("th", { text: "Model prefers" }), h("th", { class: "num", text: "P(given)" }), h("th", { class: "num", text: "P(preferred)" }),
+            withCleanlab ? h("th", { text: "Cleanlab" }) : null)),
           h("tbody", {}, res.candidates.map((c) => h("tr", {},
             h("td", { class: "num", text: String(c.row_index) }), h("td", { text: c.given_label }),
             h("td", { text: c.predicted_label }), h("td", { class: "num", text: c.given_label_probability.toFixed(3) }),
-            h("td", { class: "num", text: c.predicted_label_probability.toFixed(3) })))))));
+            h("td", { class: "num", text: c.predicted_label_probability.toFixed(3) }),
+            withCleanlab ? h("td", { text: c.cleanlab_flagged ? "yes" : "—", title: c.cleanlab_flagged ? "Cleanlab flags this row as a likely label issue" : "Not flagged by Cleanlab" }) : null))))));
     } else {
       put(out, h("p", { class: "small", text: "The model agrees with every label." }));
     }
