@@ -251,7 +251,14 @@ python -m compileall -q app tests scripts     # Python syntax
 node --check frontend/app.js                  # JavaScript syntax (optional, requires Node.js)
 node --check frontend/theme.js
 node --check frontend/kinetic-grid.js
+node --test "tests/frontend/*.test.mjs"       # frontend unit tests (Node.js 22+)
+node tests/e2e/smoke.mjs                      # browser smoke test: starts the app, drives headless Chrome
 ```
+
+The smoke test starts the app on a free loopback port and runs the full workflow in headless Chrome
+(theme switch, sample analysis, every tab, label review, train/test overlap, phone-width layout).
+It fails on any CSP violation, console error or stray `null` text. Set `CHROME_PATH` if Chrome is
+not in a standard location, and `PYTHON` to use an interpreter other than the repo `.venv`.
 
 ## API reference
 

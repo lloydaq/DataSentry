@@ -15,6 +15,8 @@ behavior changes; do not duplicate it here.
 .\.venv\Scripts\python.exe -m pytest                               # full suite
 .\.venv\Scripts\python.exe -m compileall -q app tests scripts      # Python syntax
 node --check frontend/app.js                                       # JS syntax
+node --test "tests/frontend/*.test.mjs"                            # frontend unit tests
+node tests/e2e/smoke.mjs                                           # browser smoke test (needs Chrome)
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 .\.venv\Scripts\python.exe scripts\generate_sample_data.py         # deterministic (seed 42)
 ```
@@ -46,7 +48,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/corrections.py` | Correction proposals; approved application to a copy with audit trail |
 | `app/services/report.py` | JSON report document and escaped, script-free HTML report |
 | `frontend/` | `index.html`, `style.css`, `app.js` (UI; DOM appends go through `put()`/`h()`, which skip nulls), `theme.js` (applies the saved theme before paint; key `datasentry-theme`), `kinetic-grid.js` (canvas background); no build step, no external assets |
-| `tests/` | pytest: unit, API integration, security boundaries, determinism (`conftest.py` holds shared helpers) |
+| `tests/` | pytest: unit, API integration, security boundaries, determinism (`conftest.py` holds shared helpers); `frontend/` Node unit tests for `app.js` helpers (fake DOM, no deps); `e2e/smoke.mjs` headless-Chrome workflow test |
 | `docs/` | README artwork (`assets/*.svg`) and real app screenshots (`screenshots/*-light.png`, `*-dark.png`) |
 | `sample_data/` | Synthetic demo CSVs from `scripts/generate_sample_data.py`; planted issues listed in its README |
 | `reports/` | Reserved for report artifacts. Preserve it and its contents; nothing writes here automatically |
