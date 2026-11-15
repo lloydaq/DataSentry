@@ -38,7 +38,6 @@ jobs:
         run: |
           node --check frontend/app.js
           node --check frontend/theme.js
-          node --check frontend/kinetic-grid.js
 
       - name: Run frontend unit tests
         run: node --test "tests/frontend/*.test.mjs"

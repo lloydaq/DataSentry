@@ -3,27 +3,27 @@
   <desc id="desc">A browser frontend sends multipart uploads over localhost to a FastAPI application. Routes read uploads into memory with size caps and call pure-Python services: loader, profiler, target, leakage, findings, analysis, label review, corrections and report, built on pandas, NumPy, scikit-learn and Pydantic. Responses are JSON results, downloadable JSON or HTML reports, and corrected CSV copies with audit records. There is no database and no external network call, and uploads are never written to disk.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1222"/>
-      <stop offset="1" stop-color="#121c36"/>
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#141414"/>
     </linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-      <path d="M0 0 10 5 0 10z" fill="#7a9cf5"/>
+      <path d="M0 0 10 5 0 10z" fill="#8cb9cc"/>
     </marker>
     <style>
-      .sans { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      .sans { font-family: Inter, -apple-system, 'SF Pro Text', 'Segoe UI', system-ui, Helvetica, Arial, sans-serif; }
       .mono { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace; }
-      .panel { fill: #16213f; stroke: #2c3c6b; stroke-width: 1.5; }
-      .panel-accent { fill: #16213f; stroke: #5f84ee; stroke-width: 1.5; }
-      .chip { fill: #1d2a4f; stroke: #34467a; stroke-width: 1; }
-      .label { fill: #7a9cf5; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
-      .head { fill: #eef2fb; font-size: 21px; font-weight: 700; }
-      .file { fill: #dbe3f6; font-size: 15px; }
-      .desc { fill: #9eabc8; font-size: 14px; }
-      .flow { stroke: #7a9cf5; stroke-width: 2.5; fill: none; }
+      .panel { fill: #1a1a1a; stroke: #2b2b2b; stroke-width: 1.5; }
+      .panel-accent { fill: #1a1a1a; stroke: #00638e; stroke-width: 1.5; }
+      .chip { fill: #1f1f1f; stroke: #3d3d3d; stroke-width: 1; }
+      .label { fill: #8cb9cc; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
+      .head { fill: #ffffff; font-size: 21px; font-weight: 700; }
+      .file { fill: #e6e8ea; font-size: 15px; }
+      .desc { fill: #a8acb1; font-size: 14px; }
+      .flow { stroke: #8cb9cc; stroke-width: 2.5; fill: none; }
     </style>
   </defs>
   <rect width="1200" height="640" rx="22" fill="url(#bg)"/>
-  <text x="48" y="58" class="sans" fill="#eef2fb" font-size="24" font-weight="750">Architecture</text>
+  <text x="48" y="58" class="sans" fill="#ffffff" font-size="24" font-weight="750">Architecture</text>
   <text x="48" y="86" class="sans desc">One local process: FastAPI serves the API and the static frontend. No database, no external network calls.</text>
 
   <!-- Browser -->
@@ -33,7 +33,6 @@
   <text x="70" y="212" class="mono file">index.html · style.css</text>
   <text x="70" y="238" class="mono file">app.js</text>
   <text x="70" y="264" class="mono file">theme.js</text>
-  <text x="70" y="290" class="mono file">kinetic-grid.js</text>
   <text x="70" y="330" class="sans desc">Plain HTML/CSS/JS, no build.</text>
   <text x="70" y="354" class="sans desc">Dataset text rendered via</text>
   <text x="70" y="376" class="sans desc">textContent only. Strict CSP.</text>
@@ -68,7 +67,7 @@
     <rect x="858" y="298" width="134" height="40" rx="8" class="chip"/><text x="874" y="324">corrections</text>
     <rect x="1002" y="298" width="128" height="40" rx="8" class="chip"/><text x="1018" y="324">report</text>
   </g>
-  <text x="714" y="374" class="sans desc">Typed contracts: <tspan class="mono" fill="#dbe3f6">models/schemas.py</tspan> (Pydantic)</text>
+  <text x="714" y="374" class="sans desc">Typed contracts: <tspan class="mono" fill="#e6e8ea">models/schemas.py</tspan> (Pydantic)</text>
   <text x="714" y="404" class="sans desc">Built on pandas · NumPy · scikit-learn (label review)</text>
 
   <!-- Flows -->

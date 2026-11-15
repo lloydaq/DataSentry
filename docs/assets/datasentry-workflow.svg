@@ -3,26 +3,26 @@
   <desc id="desc">Four stages from left to right: a CSV dataset is validated in memory; profiling and diagnostics run; findings and opt-in ML checks are reported with evidence; the user reviews outputs, downloads JSON or HTML reports, and can apply explicitly approved corrections to a copy.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1222"/>
-      <stop offset="1" stop-color="#121c36"/>
+      <stop offset="0" stop-color="#000000"/>
+      <stop offset="1" stop-color="#141414"/>
     </linearGradient>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-      <path d="M0 0 10 5 0 10z" fill="#7a9cf5"/>
+      <path d="M0 0 10 5 0 10z" fill="#8cb9cc"/>
     </marker>
     <style>
-      .sans { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      .sans { font-family: Inter, -apple-system, 'SF Pro Text', 'Segoe UI', system-ui, Helvetica, Arial, sans-serif; }
       .mono { font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace; }
-      .card { fill: #16213f; stroke: #2c3c6b; stroke-width: 1.5; }
-      .card-accent { fill: #16213f; stroke: #5f84ee; stroke-width: 1.5; }
-      .step { fill: #7a9cf5; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
-      .title { fill: #eef2fb; font-size: 21px; font-weight: 700; }
-      .item { fill: #b8c3dc; font-size: 15px; }
-      .note { fill: #8e9bba; font-size: 14px; }
-      .flow { stroke: #7a9cf5; stroke-width: 2.5; fill: none; }
+      .card { fill: #1a1a1a; stroke: #2b2b2b; stroke-width: 1.5; }
+      .card-accent { fill: #1a1a1a; stroke: #00638e; stroke-width: 1.5; }
+      .step { fill: #8cb9cc; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
+      .title { fill: #ffffff; font-size: 21px; font-weight: 700; }
+      .item { fill: #c9ccd0; font-size: 15px; }
+      .note { fill: #9b9fa4; font-size: 14px; }
+      .flow { stroke: #8cb9cc; stroke-width: 2.5; fill: none; }
     </style>
   </defs>
   <rect width="1200" height="380" rx="22" fill="url(#bg)"/>
-  <text x="48" y="58" class="sans" fill="#eef2fb" font-size="24" font-weight="750">From raw CSV to reviewed decisions</text>
+  <text x="48" y="58" class="sans" fill="#ffffff" font-size="24" font-weight="750">From raw CSV to reviewed decisions</text>
   <text x="48" y="86" class="sans note">Everything runs on your machine. Uploads stay in memory and are never stored.</text>
 
   <!-- Stage 1 -->

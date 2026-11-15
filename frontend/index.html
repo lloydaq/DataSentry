@@ -5,21 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DataSentry: dataset diagnostics</title>
   <meta name="description" content="Local-first dataset diagnostics for machine-learning practitioners.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect width='34' height='34' rx='8' fill='%232f5bd3'/%3E%3Cpath d='M8 11h18M8 16h18M8 21h10' stroke='white' stroke-opacity='.45' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='6.5' fill='none' stroke='white' stroke-width='2.2'/%3E%3Cpath d='M20.8 20.8 25 25' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23000000'/%3E%3Cstop offset='.38' stop-color='%23004a6b'/%3E%3Cstop offset='.68' stop-color='%2300638e'/%3E%3Cstop offset='1' stop-color='%238cb9cc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='34' height='34' rx='9' fill='url(%23g)'/%3E%3Cpath d='M8 11h18M8 16h18M8 21h10' stroke='white' stroke-opacity='.4' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='6.5' fill='none' stroke='white' stroke-width='2.2'/%3E%3Cpath d='M20.8 20.8 25 25' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
   <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
-  <script src="kinetic-grid.js" defer></script>
 </head>
 <body>
-  <canvas class="kinetic-grid" aria-hidden="true"></canvas>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="topbar">
     <a class="brand" href="./" aria-label="DataSentry home">
       <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true">
-        <rect class="brand-tile" width="34" height="34" rx="8"></rect>
+        <defs>
+          <linearGradient id="brand-gradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#000000"></stop>
+            <stop offset="0.38" stop-color="#004a6b"></stop>
+            <stop offset="0.68" stop-color="#00638e"></stop>
+            <stop offset="1" stop-color="#8cb9cc"></stop>
+          </linearGradient>
+        </defs>
+        <rect width="34" height="34" rx="9" fill="url(#brand-gradient)"></rect>
         <path class="brand-rows" d="M8 11h18M8 16h18M8 21h10"></path>
-        <path class="brand-scan" d="M8 17h18"></path>
         <circle class="brand-lens" cx="16" cy="16" r="6.5"></circle>
         <path class="brand-handle" d="M20.8 20.8 25 25"></path>
       </svg>
@@ -39,7 +46,6 @@
     <!-- Upload ------------------------------------------------------------------------------>
     <section id="upload-view" class="upload-view" aria-labelledby="hero-title">
       <div class="hero">
-        <p class="eyebrow">Dataset diagnostics for machine learning</p>
         <h1 id="hero-title">Find data problems before they reach your model.</h1>
         <p class="lede">
           DataSentry profiles a CSV file on your machine and explains what it finds, with the
