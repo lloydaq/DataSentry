@@ -169,6 +169,85 @@ must be an optional extra, never a hard requirement.
 
 ---
 
+## Proposed next phases
+
+All phases above are done. These are proposals only: nothing below is implemented, and each would be
+built and tested one at a time under the same rules (evidence-based finding types, no scores
+presented as probabilities, nothing persisted, no external calls).
+
+### Phase 12 — Re-identification risk screen ☐ *(distinctive)*
+
+**Goal:** warn before a dataset is shared when ordinary columns can single out individuals.
+
+- Search small combinations (up to 3 columns) of low-to-medium-cardinality columns, excluding
+  obvious identifiers, for quasi-identifiers: report how many rows are unique (k = 1) or in tiny
+  groups (k < 5) for each combination, worst first.
+- A bounded search (`*_LIMIT` on columns and combinations); findings are potential issues with the
+  combination and k-anonymity counts as evidence, never the values themselves.
+- Not a privacy guarantee: say so, and say which combinations were not searched.
+
+**Done when:** a synthetic fixture with a planted (postcode, birth date, gender) combination is
+flagged with the right k counts, and a fixture without one is not.
+
+### Phase 13 — Detector self-test ☐ *(distinctive)*
+
+**Goal:** know how far to trust a clean result on data shaped like yours.
+
+- On a copy of the uploaded data, plant each supported problem in turn (duplicates, near-duplicates,
+  missing blocks, constant column, leaky copy of the target, label flips, category variants) at
+  fixed seeds and sizes, and record whether DataSentry's own checks catch it.
+- Report detection rate per problem type and size, with the seeds; nothing is changed in the
+  original file.
+
+**Done when:** reruns are identical, and every detector catches its planted problem above a
+documented size on the sample datasets.
+
+### Phase 14 — Evidence notebook export ☐
+
+**Goal:** let a reviewer verify findings without trusting DataSentry.
+
+- Export a `.ipynb` that loads the CSV with the recorded parsing options and recomputes each
+  finding's evidence with plain pandas, next to the value DataSentry reported.
+- Generated code only, never executed by the server; dataset strings are escaped as literals.
+
+**Done when:** running the exported notebook on the sample reproduces every reported statistic
+exactly.
+
+### Phase 15 — Source audit ☐ *(distinctive)*
+
+**Goal:** tell systematic data problems from random noise.
+
+- The user names a source column (annotator, site, device, batch). Compare per source: missing
+  rate, duplicate rate, label distribution and label-review disagreement rate, with counts.
+- Flag sources that differ strongly from the rest as potential issues, with the comparison and the
+  number of rows behind it; small sources are reported as inconclusive.
+
+**Done when:** a fixture where one annotator's labels are planted wrong is singled out, and evenly
+noisy data is not.
+
+### Phase 16 — Is more data worth it? ☐
+
+**Goal:** answer whether collecting more rows is likely to help this baseline model.
+
+- A learning curve: the label-review model trained on 10%, 25%, 50%, 75% and 100% of each seed's
+  training rows, scored on the same held-out test set; mean and spread per size.
+- Worded as a measurement on this dataset and model, not a forecast.
+
+**Done when:** results are reproducible and a fixture with clear signal shows a rising curve.
+
+### Phase 17 — Split Lab ☐
+
+**Goal:** try a split before committing to it.
+
+- An interactive panel: move a date cut-off or a group split and see train/test sizes, class
+  balance per side, entity and temporal overlap, recomputed on the server from the Split Doctor
+  services.
+- Export the chosen split as row assignments (CSV of row positions and side).
+
+**Done when:** every number shown matches the Split Doctor and overlap services for the same split.
+
+---
+
 ### Suggested order
 
 0 → 1 lay the foundation. Then **3 (Split Doctor)** and **6 (CLI)** give the most practical value

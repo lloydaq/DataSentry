@@ -624,9 +624,31 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 
 ## Roadmap
 
-Every phase in [PHASES.md](PHASES.md) is complete. Open ideas, none of them started: fuzzy
-(typo-tolerant) duplicate matching, regression targets for model-impact experiments, and formats
-other than CSV.
+**Status:** all twelve planned phases (0–11) in [PHASES.md](PHASES.md) are complete, tested and
+merged, and CI is green on `main`.
+
+**Proposed next phases** (none started; details and "done when" criteria in
+[PHASES.md](PHASES.md#proposed-next-phases)):
+
+- **Re-identification risk screen.** Find combinations of ordinary columns (such as postcode, birth
+  date and gender) that single out individual rows before a dataset is shared, with uniqueness
+  rates as evidence.
+- **Detector self-test.** Plant known problems into a copy of *your* dataset and measure which ones
+  DataSentry actually catches, so you know how far to trust a clean result on data shaped like
+  yours.
+- **Evidence notebook export.** A Jupyter notebook that reproduces every finding from the raw CSV
+  with plain pandas and the documented thresholds, so a reviewer can verify results without
+  DataSentry.
+- **Source audit.** Given a source column (annotator, site, device, batch), compare missing
+  values, label rates and label-review disagreement per source to tell systematic problems from
+  random noise.
+- **Is more data worth it?** A seeded learning curve (10% to 100% of the training rows) showing
+  whether the baseline model is still improving, measured on this dataset.
+- **Split Lab.** Move a date cut-off or regroup entities interactively and watch train/test
+  leakage, class balance and size update before committing to a split.
+
+Smaller open ideas: fuzzy (typo-tolerant) duplicate matching, regression targets for model-impact
+experiments, and formats other than CSV.
 
 ## Contributing
 
