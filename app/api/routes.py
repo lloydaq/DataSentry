@@ -136,19 +136,21 @@ async def analyze(request: Request) -> AnalysisResult:
 @router.post("/report", responses={200: {"content": {"text/html": {}}}, **_ERRORS})
 async def download_report(request: Request) -> Response:
     """Analyze and return a downloadable report. Fields: ``file``, ``target_column``,
-    ``format`` (``json`` or ``html``) and ``include_values`` (default false)."""
+    ``format`` (``json`` or ``html``), ``include_values`` (default false) and optional ``reviews``
+    (JSON list of review decisions; only those matching a finding are kept)."""
     upload, fields = await _single_upload(request)
     fmt = fields.get("format", "json").strip().lower()
     if fmt not in ("json", "html"):
         raise DatasetError("invalid_request", "Field 'format' must be 'json' or 'html'.")
     include_values = _flag(fields, "include_values")
+    reviews = report.parse_reviews(fields.get("reviews", ""))
     target = _target(fields)
     options = _options(fields)
     limits = _limits(request)
 
     def build() -> tuple[str, str]:
         dataset = load_csv(upload.data, limits, upload.filename, options)
-        doc = report.build_report(run_analysis(dataset, target), include_values)
+        doc = report.build_report(run_analysis(dataset, target), include_values, reviews=reviews)
         if fmt == "html":
             return report.render_html(doc), dataset.filename
         return doc.model_dump_json(indent=2), dataset.filename

@@ -102,7 +102,7 @@ body {
 ::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 h1, h2, h3, p { margin: 0; }
 h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 code, .mono { font-family: var(--mono); font-size: 0.9em; }
 [hidden] { display: none !important; }
 .muted { color: var(--text-3); }
@@ -438,6 +438,11 @@ button.category-cell:focus-visible { outline-offset: 2px; border-radius: var(--r
 
 /* Findings ---------------------------------------------------------------------------------- */
 .findings-list { display: grid; gap: 10px; }
+.review-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.finding-review { margin-top: 6px; color: var(--accent-ink); font-size: 12.5px; font-weight: 550; overflow-wrap: anywhere; }
+.review-editor { display: grid; grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.review-note { min-height: 40px; padding: 8px 12px; resize: vertical; line-height: 1.45; }
+@media (max-width: 720px) { .review-editor { grid-template-columns: minmax(0, 1fr); } }
 /* Severity is carried by the pill; the card's 1px border takes a faint tint of it on every side. */
 .finding {
   --sev: var(--info);

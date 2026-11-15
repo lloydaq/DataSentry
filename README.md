@@ -79,6 +79,7 @@ number. Instead it reports each category separately and says which checks did no
 | **Compare versions (opt-in)** | What changed between two exports of a dataset: columns added, removed, possibly renamed or retyped; rows kept, added and dropped; missing-value increases; distribution shift per column (Kolmogorov–Smirnov or population stability index); and which findings are new, resolved or still present |
 | **Data contracts (opt-in)** | Export a contract from a good file (types, nullability, uniqueness, numeric ranges, allowed categories), edit it, and check later files against it; every violation reports a row count and row numbers, never cell values |
 | **Datasheet draft** | Dataset documentation in the style of "Datasheets for Datasets": composition, columns, target and known findings filled in from the analysis (each field records where its value came from), and the questions only a person can answer (motivation, collection, consent, intended uses, maintenance) left empty |
+| **Review log** | Mark each finding *acknowledged*, *accepted risk* or *fixed upstream* with a short note; decisions stay in your browser tab, travel inside the exported JSON and HTML reports, and can be imported back from a JSON report. Nothing is stored on the server |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
 | **Reports** | Strict JSON and a self-contained, script-free HTML report |
 | **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
@@ -338,7 +339,7 @@ are echoed in each result as `dataset.parsing`, so a result records how its file
 |---|---|---|---|
 | GET | `/api/health` | none | Status, version and active limits |
 | POST | `/api/analyze` | `file`, optional `target_column` | `AnalysisResult` JSON |
-| POST | `/api/report` | `file`, optional `target_column`, `format` (`json`/`html`), `include_values` (`true`/`false`, default `false`) | Report as a download |
+| POST | `/api/report` | `file`, optional `target_column`, `format` (`json`/`html`), `include_values` (`true`/`false`, default `false`), `reviews` (JSON list of review decisions: `finding_code`, `columns`, `status` = `acknowledged`/`accepted_risk`/`fixed_upstream`, `note` up to 280 characters, `decided_at`; at most 500, only those matching a finding are kept) | Report as a download |
 | POST | `/api/label-review` | `file`, `target_column` | `LabelReviewResult` JSON |
 | POST | `/api/train-test-overlap` | `train_file`, `test_file`, optional `target_column`, `entity_column`, `time_column` | `TrainTestOverlapResult` JSON |
 | POST | `/api/dataset-diff` | `old_file`, `new_file`, optional `target_column` | `DatasetDiff` JSON |
@@ -362,7 +363,7 @@ Errors always have the shape `{"error": "<stable_code>", "message": "<safe text>
 `empty_file`, `no_data_rows`, `invalid_encoding`, `malformed_csv`, `empty_header`,
 `duplicate_header`, `too_many_rows`, `too_many_columns`, `file_too_large`, `unsupported_format`,
 `unknown_target_column`, `unknown_entity_column`, `unknown_time_column`, `unusable_time_column`,
-`approval_required`, `invalid_plan`, `invalid_contract`, `invalid_request` (for example an unknown delimiter or
+`approval_required`, `invalid_plan`, `invalid_contract`, `invalid_reviews`, `invalid_request` (for example an unknown delimiter or
 encoding, or the same column chosen for two roles).
 
 <details>

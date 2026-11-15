@@ -10,7 +10,17 @@ from datetime import UTC, datetime
 from html import escape
 
 from app.config import APP_VERSION
-from app.models.schemas import AnalysisResult, ColumnProfile, Finding, ReportDocument, ReportMetadata
+from pydantic import TypeAdapter, ValidationError
+
+from app.models.schemas import (
+    AnalysisResult,
+    ColumnProfile,
+    Finding,
+    FindingReview,
+    ReportDocument,
+    ReportMetadata,
+)
+from app.services.loader import DatasetError
 from app.services import contract as C
 from app.services import diff as Dd
 from app.services import findings as F
@@ -108,8 +118,37 @@ METHODOLOGY = [
 ]
 
 
+MAX_REVIEWS = 500
+_REVIEWS = TypeAdapter(list[FindingReview])
+
+
+def review_key(code: str, columns: list[str]) -> tuple[str, tuple[str, ...]]:
+    return code, tuple(columns)
+
+
+def parse_reviews(raw: str) -> list[FindingReview]:
+    """Validate review decisions sent with a report request (untrusted JSON)."""
+    if not raw.strip():
+        return []
+    try:
+        reviews = _REVIEWS.validate_json(raw)
+    except ValidationError:
+        raise DatasetError(
+            "invalid_reviews", "Field 'reviews' must be a list of valid review decisions (JSON)."
+        ) from None
+    if len(reviews) > MAX_REVIEWS:
+        raise DatasetError("invalid_reviews", f"At most {MAX_REVIEWS} review decisions are accepted.")
+    keys = [review_key(r.finding_code, r.columns) for r in reviews]
+    if len(set(keys)) != len(keys):
+        raise DatasetError("invalid_reviews", "Each finding may have only one review decision.")
+    return reviews
+
+
 def build_report(
-    result: AnalysisResult, include_values: bool, generated_at: datetime | None = None
+    result: AnalysisResult,
+    include_values: bool,
+    generated_at: datetime | None = None,
+    reviews: list[FindingReview] | None = None,
 ) -> ReportDocument:
     analysis = result if include_values else redact_values(result)
     note = PRIVACY_NOTE + (
@@ -127,7 +166,15 @@ def build_report(
         ),
         analysis=analysis,
         methodology=METHODOLOGY,
+        reviews=_matching_reviews(result, reviews or []),
     )
+
+
+def _matching_reviews(result: AnalysisResult, reviews: list[FindingReview]) -> list[FindingReview]:
+    """Keep the decisions that belong to this analysis's findings, in finding order."""
+    by_key = {review_key(r.finding_code, r.columns): r for r in reviews}
+    keys = [review_key(f.code, f.columns) for f in result.findings]
+    return [by_key[k] for k in keys if k in by_key]
 
 
 def redact_values(result: AnalysisResult) -> AnalysisResult:
@@ -164,6 +211,7 @@ dl{display:grid;grid-template-columns:140px 1fr;gap:2px 12px;margin:8px 0 0}dt{c
 code{font-family:ui-monospace,Consolas,monospace;font-size:12px}
 .status{font-size:16px;font-weight:600}ul{padding-left:20px}
 @media print{main{padding:0}.finding{break-inside:avoid}}
+.review{background:var(--soft);border-radius:6px;padding:6px 10px;margin:8px 0}
 """
 
 
@@ -181,7 +229,22 @@ def _num(value: float | int | None, pct: bool = False) -> str:
     return f"{value:,}"
 
 
-def _finding_html(f: Finding) -> str:
+REVIEW_TEXT = {
+    "acknowledged": "Acknowledged",
+    "accepted_risk": "Accepted risk",
+    "fixed_upstream": "Fixed upstream",
+}
+
+
+def _review_html(r: FindingReview | None) -> str:
+    if r is None:
+        return ""
+    note = f": {_e(r.note)}" if r.note else ""
+    return (f"<p class='review'><b>Review: {_e(REVIEW_TEXT[r.status.value])}</b>{note} "
+            f"<span class='muted'>({_e(r.decided_at)})</span></p>")
+
+
+def _finding_html(f: Finding, review: FindingReview | None = None) -> str:
     evidence = "".join(f"<dt>{_e(k)}</dt><dd>{_e(v)}</dd>" for k, v in f.evidence.items())
     columns = ", ".join(f"<code>{_e(c)}</code>" for c in f.columns) or "Whole dataset"
     limitation = f"<dt>Limitations</dt><dd>{_e(f.limitations)}</dd>" if f.limitations else ""
@@ -190,7 +253,7 @@ def _finding_html(f: Finding) -> str:
         f'<span class="tag {_e(f.severity.value)}">{_e(f.severity.value)}</span>'
         f'<span class="tag">{_e(f.kind.value.replace("_", " "))}</span>'
         f'<span class="tag">{_e(f.category.value.replace("_", " "))}</span>'
-        f"<h3>{_e(f.title)}</h3><p>{_e(f.explanation)}</p><dl>"
+        f"<h3>{_e(f.title)}</h3><p>{_e(f.explanation)}</p>{_review_html(review)}<dl>"
         f"<dt>Affected</dt><dd>{columns}</dd>"
         f"<dt>Why it matters</dt><dd>{_e(f.why_it_matters)}</dd>"
         f"<dt>Next step</dt><dd>{_e(f.recommendation)}</dd>{limitation}"
@@ -288,7 +351,23 @@ def render_html(doc: ReportDocument) -> str:
     )
 
     parts.append(f"<h2>Findings ({len(a.findings)})</h2>")
-    parts += [_finding_html(f) for f in a.findings] or ["<p>No findings.</p>"]
+    reviews = {review_key(r.finding_code, r.columns): r for r in doc.reviews}
+    parts += [_finding_html(f, reviews.get(review_key(f.code, f.columns))) for f in a.findings] or [
+        "<p>No findings.</p>"
+    ]
+    if doc.reviews:
+        titles = {review_key(f.code, f.columns): f.title for f in a.findings}
+        parts.append(f"<h2>Review log ({len(doc.reviews)})</h2>")
+        parts.append("<p class='muted'>Decisions recorded by a person in the DataSentry interface. "
+                     "They are part of this report only and were not stored on the server.</p>")
+        parts.append("<table><tr><th>Finding</th><th>Decision</th><th>Note</th><th>Decided</th></tr>")
+        parts += [
+            f"<tr><td>{_e(titles[review_key(r.finding_code, r.columns)])}</td>"
+            f"<td>{_e(REVIEW_TEXT[r.status.value])}</td><td>{_e(r.note) or '—'}</td>"
+            f"<td>{_e(r.decided_at)}</td></tr>"
+            for r in doc.reviews
+        ]
+        parts.append("</table>")
 
     if a.target:
         t = a.target

@@ -188,6 +188,11 @@
             <option value="column">Sort: column name</option>
           </select>
         </div>
+        <div class="review-bar">
+          <span id="review-count" class="small muted"></span>
+          <label class="btn btn-small" for="review-import" title="Restore decisions from a DataSentry JSON report">Import decisions…</label>
+          <input type="file" id="review-import" accept=".json,application/json" class="visually-hidden">
+        </div>
         <p class="legend small muted">
           <strong>Likely issue</strong>: almost always a problem for modeling ·
           <strong>Potential issue</strong>: often a problem, depends on context ·
