@@ -2,7 +2,8 @@
 
 Uploads are multipart/form-data with the CSV in a ``file`` field (``train_file``/``test_file`` for
 overlap checks). Options travel as form fields rather than query parameters, so column names do
-not appear in access logs.
+not appear in access logs. Every upload endpoint accepts the parsing fields ``delimiter``,
+``encoding`` and ``missing_values`` (see ``loader.parse_options``).
 """
 
 import threading
@@ -27,7 +28,7 @@ from app.models.schemas import (
 )
 from app.services import corrections, label_review, leakage, report
 from app.services.analysis import run_analysis
-from app.services.loader import DatasetError, load_csv
+from app.services.loader import DatasetError, ParseOptions, load_csv, parse_options
 
 T = TypeVar("T")
 router = APIRouter(prefix="/api")
@@ -71,6 +72,12 @@ def _target(fields: dict[str, str]) -> str | None:
     return value if value.strip() else None
 
 
+def _options(fields: dict[str, str]) -> ParseOptions:
+    return parse_options(
+        fields.get("delimiter"), fields.get("encoding"), fields.get("missing_values")
+    )
+
+
 def _flag(fields: dict[str, str], name: str) -> bool:
     value = fields.get(name, "").strip().lower()
     if value in _TRUE:
@@ -100,9 +107,11 @@ async def analyze(request: Request) -> AnalysisResult:
     """Profile an uploaded CSV. Form fields: ``file`` and optional ``target_column``."""
     upload, fields = await _single_upload(request)
     target = _target(fields)
+    options = _options(fields)
     limits = _limits(request)
     return await _run(
-        request, lambda: run_analysis(load_csv(upload.data, limits, upload.filename), target)
+        request,
+        lambda: run_analysis(load_csv(upload.data, limits, upload.filename, options), target),
     )
 
 
@@ -116,10 +125,11 @@ async def download_report(request: Request) -> Response:
         raise DatasetError("invalid_request", "Field 'format' must be 'json' or 'html'.")
     include_values = _flag(fields, "include_values")
     target = _target(fields)
+    options = _options(fields)
     limits = _limits(request)
 
     def build() -> tuple[str, str]:
-        dataset = load_csv(upload.data, limits, upload.filename)
+        dataset = load_csv(upload.data, limits, upload.filename, options)
         doc = report.build_report(run_analysis(dataset, target), include_values)
         if fmt == "html":
             return report.render_html(doc), dataset.filename
@@ -143,29 +153,32 @@ async def review_labels(request: Request) -> LabelReviewResult:
     target = _target(fields)
     if target is None:
         raise DatasetError("missing_target_column", "Label review requires a target column.")
+    options = _options(fields)
     limits = _limits(request)
     return await _run(
         request,
         lambda: label_review.review_labels(
-            load_csv(upload.data, limits, upload.filename), target, limits
+            load_csv(upload.data, limits, upload.filename, options), target, limits
         ),
     )
 
 
 @router.post("/train-test-overlap", response_model=TrainTestOverlapResult, responses=_ERRORS)
 async def train_test_overlap(request: Request) -> TrainTestOverlapResult:
-    """Compare two files. Fields: ``train_file``, ``test_file`` and optional ``target_column``."""
+    """Compare two files. Fields: ``train_file``, ``test_file`` and optional ``target_column``.
+    Both files are read with the same parsing options."""
     limits = _limits(request)
     files, fields = await read_form(
         request, file_fields=("train_file", "test_file"), max_file_bytes=limits.max_upload_bytes
     )
     target = _target(fields)
+    options = _options(fields)
     train, test = files["train_file"], files["test_file"]
     return await _run(
         request,
         lambda: leakage.train_test_overlap(
-            load_csv(train.data, limits, train.filename),
-            load_csv(test.data, limits, test.filename),
+            load_csv(train.data, limits, train.filename, options),
+            load_csv(test.data, limits, test.filename, options),
             target,
         ),
     )
@@ -181,10 +194,11 @@ async def apply_corrections(request: Request) -> CorrectionResult:
         raise DatasetError(
             "invalid_plan", "Field 'plan' must be a valid correction plan (JSON)."
         ) from None
+    options = _options(fields)
     limits = _limits(request)
     return await _run(
         request,
         lambda: corrections.apply_corrections(
-            upload.data, load_csv(upload.data, limits, upload.filename), plan
+            upload.data, load_csv(upload.data, limits, upload.filename, options), plan
         ),
     )

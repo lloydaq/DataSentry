@@ -30,12 +30,21 @@ class InferredType(StrEnum):
     empty = "empty"
 
 
+class ParsingInfo(Model):
+    """The options a file was read with, echoed so a result can be reproduced."""
+
+    delimiter: Literal["comma", "semicolon", "tab", "pipe"]
+    encoding: Literal["utf-8", "latin-1"]
+    missing_values: list[str]
+
+
 class DatasetInfo(Model):
     filename: str
     size_bytes: int
     sha256: str
     n_rows: int
     n_columns: int
+    parsing: ParsingInfo
 
 
 class TypeCount(Model):

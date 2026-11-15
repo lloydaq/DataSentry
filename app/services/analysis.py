@@ -92,6 +92,7 @@ def run_analysis(dataset: LoadedDataset, target_column: str | None = None) -> An
             sha256=dataset.sha256,
             n_rows=n_rows,
             n_columns=frame.shape[1],
+            parsing=dataset.options.info(),
         ),
         settings=AnalysisSettings(target_column=target_column),
         stages=stages,

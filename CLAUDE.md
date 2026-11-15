@@ -36,7 +36,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/api/routes.py` | HTTP endpoints only; CPU work runs in a thread behind a concurrency semaphore |
 | `app/api/uploads.py` | Size-capped, in-memory multipart parsing (uploads never spool to disk) |
 | `app/models/schemas.py` | Pydantic contracts; `allow_inf_nan=False`, so outputs are strict JSON |
-| `app/services/loader.py` | CSV validation/parsing; `DatasetError` for expected, user-safe failures |
+| `app/services/loader.py` | CSV validation/parsing; `ParseOptions` (allow-listed delimiter and encoding, capped missing-value tokens, echoed as `dataset.parsing`); `DatasetError` for expected, user-safe failures |
 | `app/services/profiler.py` | Types, missing values, duplicates, numeric/categorical stats, redundancy |
 | `app/services/target.py` | Target task inference, class distribution, label conflicts |
 | `app/services/leakage.py` | Single-feature leakage screen; train/test overlap |
