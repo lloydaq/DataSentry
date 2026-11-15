@@ -17,6 +17,7 @@ behavior changes; do not duplicate it here.
 node --check frontend/app.js                                       # JS syntax
 node --test "tests/frontend/*.test.mjs"                            # frontend unit tests
 node tests/e2e/smoke.mjs                                           # browser smoke test (needs Chrome)
+.\.venv\Scripts\python.exe -m app.cli check sample_data\customer_churn.csv --target churned   # CLI gate
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 .\.venv\Scripts\python.exe scripts\generate_sample_data.py         # deterministic (seed 42)
 ```
@@ -35,6 +36,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/config.py` | `APP_VERSION` (single source of the version) and `Limits` (env-overridable resource limits) |
 | `app/__init__.py` | Package docstring; re-exports `__version__` from config |
 | `app/main.py` | `create_app()`: router, error handlers, security headers/CSP, static frontend and `/samples` |
+| `app/cli.py` | `python -m app.cli check`: the quality gate for scripts and CI (same services, limits and reports as the API; exit codes 0/1/2/3) |
 | `app/api/routes.py` | HTTP endpoints only; CPU work runs in a thread behind a concurrency semaphore |
 | `app/api/uploads.py` | Size-capped, in-memory multipart parsing (uploads never spool to disk) |
 | `app/models/schemas.py` | Pydantic contracts; `allow_inf_nan=False`, so outputs are strict JSON |
@@ -62,7 +64,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4) and data contracts (phase 5).
+corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5) and the quality gate CLI (phase 6).
 
 Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
 imputation as a correction, near-duplicate detection, non-CSV formats, authentication. Build them

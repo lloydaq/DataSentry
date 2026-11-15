@@ -43,6 +43,7 @@ informed corrections before model training.
 - [How to read the results](#how-to-read-the-results)
 - [Quick start](#quick-start)
 - [Running tests](#running-tests)
+- [Command-line quality gate](#command-line-quality-gate)
 - [API reference](#api-reference)
 - [Diagnostic methodology](#diagnostic-methodology)
 - [Security and privacy](#security-and-privacy)
@@ -263,6 +264,59 @@ The smoke test starts the app on a free loopback port and runs the full workflow
 (theme switch, sample analysis, every tab, label review, train/test overlap, phone-width layout).
 It fails on any CSP violation, console error or stray `null` text. Set `CHROME_PATH` if Chrome is
 not in a standard location, and `PYTHON` to use an interpreter other than the repo `.venv`.
+
+## Command-line quality gate
+
+Run DataSentry in a script or a CI pipeline, with no server. The CLI uses the same services,
+limits and report code as the API, so `--result` writes the same document `/api/analyze` returns
+and `--report` the same document `/api/report` returns.
+
+```powershell
+python -m app.cli check data.csv --target label --report report.html
+python -m app.cli check data.csv --fail-on potential_issue --min-severity medium
+python -m app.cli check data.csv --contract data.contract.json --format json
+```
+
+| Option | Meaning |
+|---|---|
+| `--target COL` | Target column for target and leakage checks |
+| `--fail-on KIND` | Lowest finding kind that fails the gate: `likely_issue` (default), `potential_issue`, `inconclusive`, or `never` (report only). Observations never fail it |
+| `--min-severity SEV` | Ignore findings below this severity when gating: `info` (default), `low`, `medium`, `high` |
+| `--contract FILE` | Also check the file against a data contract; violations are likely issues. The file is then read with the contract's parsing options |
+| `--report FILE` | Write the report (`.json` or `.html`); `--include-values` adds category values |
+| `--result FILE` | Write the raw analysis result as JSON |
+| `--format text\|json` | Human summary (default) or a JSON summary on stdout |
+| `--delimiter`, `--encoding`, `--missing-values` | Parsing options, as in the API |
+
+| Exit code | Meaning |
+|---|---|
+| `0` | The gate passed |
+| `1` | At least one finding is at or above the threshold |
+| `2` | Usage or input error: bad arguments, unreadable or invalid file, invalid contract |
+| `3` | The analysis was incomplete (a stage failed), so the gate cannot vouch for the file |
+
+The size, row and column limits come from the same `DATASENTRY_*` environment variables as the
+server. Dataset strings are printed with control characters replaced, and errors are fixed
+messages without cell values or tracebacks.
+
+<details>
+<summary><b>Gate a dataset in GitHub Actions</b></summary>
+
+```yaml
+- name: Check the training data
+  run: |
+    python -m app.cli check data/train.csv --target label \
+      --contract data/train.contract.json --report datasentry-report.html
+- name: Keep the report
+  if: always()
+  uses: actions/upload-artifact@v4
+  with:
+    name: datasentry-report
+    path: datasentry-report.html
+```
+
+The step fails when the gate fails (exit code 1), and the HTML report is kept either way.
+</details>
 
 ## API reference
 
