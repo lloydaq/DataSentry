@@ -10,9 +10,9 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from app.config import APP_VERSION
-from app.models.schemas import AnalysisResult, AnalysisSettings, DatasetInfo, StageStatus
+from app.models.schemas import AnalysisResult, AnalysisSettings, StageStatus
 from app.services import corrections, findings, profiler, target
-from app.services.loader import DatasetError, LoadedDataset
+from app.services.loader import DatasetError, LoadedDataset, describe
 
 logger = logging.getLogger("datasentry.analysis")
 T = TypeVar("T")
@@ -86,14 +86,7 @@ def run_analysis(dataset: LoadedDataset, target_column: str | None = None) -> An
     return AnalysisResult(
         tool_version=APP_VERSION,
         status="complete" if all(s.status == "completed" for s in stages) else "partial",
-        dataset=DatasetInfo(
-            filename=dataset.filename,
-            size_bytes=dataset.size_bytes,
-            sha256=dataset.sha256,
-            n_rows=n_rows,
-            n_columns=frame.shape[1],
-            parsing=dataset.options.info(),
-        ),
+        dataset=describe(dataset),
         settings=AnalysisSettings(target_column=target_column),
         stages=stages,
         overview=overview,

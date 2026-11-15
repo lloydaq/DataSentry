@@ -13,7 +13,7 @@ from app.models.schemas import (
     TargetTask,
 )
 from app.services import leakage
-from app.services.profiler import clip, fraction, numeric_stats
+from app.services.profiler import clip, fraction, label_strings, numeric_stats
 
 INTEGER_CLASS_MAX_UNIQUE = 20  # integer-valued numeric targets with at most this many values
 CLASS_LIST_LIMIT = 50
@@ -44,16 +44,6 @@ def infer_task(profile: ColumnProfile) -> tuple[TargetTask, str]:
         "The target is numeric with non-integer values or more than "
         f"{INTEGER_CLASS_MAX_UNIQUE} distinct values.",
     )
-
-
-def label_strings(series: pd.Series) -> pd.Series:
-    """Non-missing target values as display labels; integer-valued floats lose their '.0'."""
-    values = series.dropna()
-    if pd.api.types.is_numeric_dtype(values) and not pd.api.types.is_bool_dtype(values):
-        as_float = values.astype("float64")
-        if np.isfinite(as_float).all() and (np.mod(as_float, 1) == 0).all():
-            return as_float.astype("int64").astype(str)
-    return values.astype(str)
 
 
 def class_distribution(labels: pd.Series) -> ClassDistribution:

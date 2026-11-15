@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from app.config import Limits
-from app.models.schemas import ParsingInfo
+from app.models.schemas import DatasetInfo, ParsingInfo
 
 _BINARY_SIGNATURES = (
     (b"PK\x03\x04", "a ZIP archive or Excel workbook"),
@@ -126,6 +126,18 @@ class LoadedDataset:
     size_bytes: int
     sha256: str
     options: ParseOptions = ParseOptions()
+
+
+def describe(dataset: LoadedDataset) -> DatasetInfo:
+    """The dataset's identity and shape as reported in every result."""
+    return DatasetInfo(
+        filename=dataset.filename,
+        size_bytes=dataset.size_bytes,
+        sha256=dataset.sha256,
+        n_rows=len(dataset.frame),
+        n_columns=dataset.frame.shape[1],
+        parsing=dataset.options.info(),
+    )
 
 
 def sanitize_filename(filename: str | None, default: str = "dataset.csv") -> str:

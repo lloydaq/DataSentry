@@ -41,7 +41,8 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/loader.py` | CSV validation/parsing; `ParseOptions` (allow-listed delimiter and encoding, capped missing-value tokens, echoed as `dataset.parsing`); `DatasetError` for expected, user-safe failures |
 | `app/services/profiler.py` | Types, missing values, duplicates, numeric/categorical stats, redundancy |
 | `app/services/target.py` | Target task inference, class distribution, label conflicts |
-| `app/services/leakage.py` | Single-feature leakage screen; train/test overlap |
+| `app/services/leakage.py` | Single-feature leakage screen; train/test overlap, including entity and time-order checks |
+| `app/services/splits.py` | Split Doctor: opt-in split-strategy advice from target, entity and time columns |
 | `app/services/findings.py` | Rules turning observations into findings; qualitative summary (no score) |
 | `app/services/analysis.py` | Stage orchestration; a failed stage makes the result `partial` |
 | `app/services/label_review.py` | Opt-in cross-validated label review (scikit-learn) |
@@ -58,7 +59,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections.
+corrections; and, from `PHASES.md`, configurable parsing (phase 2) and Split Doctor (phase 3).
 
 Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
 imputation as a correction, near-duplicate detection, non-CSV formats, authentication. Build them

@@ -15,6 +15,7 @@ from app.services import findings as F
 from app.services import leakage as L
 from app.services import loader as D
 from app.services import profiler as P
+from app.services import splits as S
 from app.services import target as T
 
 SERIALIZATION_POLICY = (
@@ -72,6 +73,18 @@ METHODOLOGY = [
     "majority-guess errors); a numeric feature with single-feature ROC AUC >= {L.AUC_THRESHOLD} (binary targets); "
     f"or |Pearson r| >= {L.CORRELATION_THRESHOLD} with a regression target. These are prompts to "
     "investigate, not proof.",
+    "Split Doctor (opt-in): a time column is usable when at least "
+    f"{P.TIME_MIN_PARSED_FRACTION:.0%} of its values, {S.TIME_MIN_ROWS} or more rows with two or "
+    "more distinct dates, parse as ISO 8601; it is then recommended as the split key. Grouping by "
+    f"an entity column is recommended when at least {S.GROUP_MIN_REPEATED_FRACTION:.0%} of rows "
+    f"share an entity value and there are at least {S.GROUP_MIN_ENTITIES} entities; otherwise a "
+    "stratified split for classification targets, else a random split. Estimates use a "
+    f"{S.HOLDOUT_FRACTION:.0%} holdout. Target change over time: total variation distance of class "
+    f"shares (noted from {S.TVD_SHIFT_THRESHOLD}) or standardized mean difference (from "
+    f"{S.SMD_SHIFT_THRESHOLD}), latest {S.HOLDOUT_FRACTION:.0%} of labeled rows versus the rest, "
+    f"each side needing {S.TIME_SHIFT_MIN_ROWS} rows. Across two files, test rows sharing an "
+    "entity with training, or dated before the newest training row, are potential issues "
+    f"(medium severity from {L.OVERLAP_MEDIUM_FRACTION:.0%} of test rows).",
     "Summary: no numeric score. A category is 'issue' if it has a likely or potential problem of "
     "high or medium severity, 'review' for lower-severity problems or inconclusive checks, "
     "'pass' when only observations remain, and 'not_evaluated' when its checks did not run.",

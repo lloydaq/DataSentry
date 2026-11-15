@@ -386,6 +386,16 @@ button.chip:hover { border-color: var(--accent); color: var(--accent); }
 .big-number { font-size: 34px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .ml-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; align-items: start; }
 .ml-grid .card > * + * { margin-top: 10px; }
+.split-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.split-form .field { display: grid; gap: 6px; min-width: 0; }
+.split-form .field-label { margin-bottom: 0; font-size: 13px; }
+.split-form .input { width: 100%; }
+.split-form button { grid-column: 1 / -1; justify-self: start; }
+.split-verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-weight: 600; }
+.split-reasons { padding-left: 18px; display: grid; gap: 6px; color: var(--text-2); }
+.split-limits summary { cursor: pointer; }
+.split-limits ul { padding-left: 18px; margin-top: 6px; display: grid; gap: 4px; }
+@media (max-width: 480px) { .split-form { grid-template-columns: minmax(0, 1fr); } }
 .target-picker { margin-bottom: 16px; }
 .target-picker .toolbar { margin: 0 0 8px; }
 .target-picker select { min-width: 220px; }
