@@ -273,6 +273,14 @@
             <div id="split-results" aria-live="polite"></div>
           </div>
         </div>
+        <div class="card impact-card">
+          <h2 class="card-title">Model impact</h2>
+          <p class="small">Measures what the data problems cost a model on this dataset: the label-review model is trained with and without the features the leakage screen flagged, with and without copies of test rows in training, and with 5%, 10% and 20% of training labels flipped. Every condition is scored on the same held-out test set for each of five fixed seeds.</p>
+          <p class="small muted">These are measurements on this file with one simple model, not general claims. Per-seed scores and their spread are shown; there is no significance test.</p>
+          <button type="button" class="btn btn-primary" id="run-impact">Run experiments</button>
+          <p id="impact-hint" class="small muted"></p>
+          <div id="impact-results" aria-live="polite"></div>
+        </div>
       </section>
 
       <section id="panel-compare" class="tab-panel" role="tabpanel" aria-labelledby="tab-compare" hidden>

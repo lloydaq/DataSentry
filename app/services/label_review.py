@@ -13,37 +13,26 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from app.config import Limits
-from app.models.schemas import (
-    ExcludedFeature,
-    InferredType,
-    LabelCandidate,
-    LabelReviewResult,
-    TargetTask,
-)
+from app.models.schemas import LabelCandidate, LabelReviewResult, TargetTask
 from app.services import profiler, target
 from app.services.loader import DatasetError, LoadedDataset
+from app.services.modeling import (
+    MAX_FEATURES,
+    MODEL_DESCRIPTION,
+    build_model,
+    feature_matrix,
+    select_features,
+)
 
 CV_FOLDS = 5
 RANDOM_SEED = 0
-MAX_CATEGORIES = 50
 MAX_CLASSES = 20
-MAX_FEATURES = 200
 CANDIDATES_LIMIT = 50
-MODEL_DESCRIPTION = (
-    "LogisticRegression(max_iter=1000) on median-imputed, standardized numeric features and "
-    "one-hot encoded categorical features"
-)
-_MISSING_CATEGORY = "__missing__"
 
 LIMITATIONS = [
     "Model disagreement is not proof of a wrong label. Ambiguous examples, a weak model or "
@@ -96,66 +85,16 @@ def review_labels(dataset: LoadedDataset, target_column: str, limits: Limits) ->
 
     signals = target.analyze_target(frame, target_column, profiles).leakage_signals
     leaky = {s.column for s in signals}
-    numeric: list[str] = []
-    categorical: list[str] = []
-    excluded: list[ExcludedFeature] = []
-    for p in profiles:
-        if p.name == target_column:
-            continue
-        reason = None
-        if p.all_missing or p.is_constant:
-            reason = "no variation"
-        elif p.identifier_like:
-            reason = "identifier-like"
-        elif p.name in leaky:
-            reason = "possible target leakage"
-        elif p.inferred_type is InferredType.numeric:
-            numeric.append(p.name)
-        elif p.inferred_type in (InferredType.categorical, InferredType.boolean):
-            if p.n_unique <= MAX_CATEGORIES:
-                categorical.append(p.name)
-            else:
-                reason = f"more than {MAX_CATEGORIES} categories"
-        else:
-            reason = f"{p.inferred_type.value} columns are not used"
-        if reason:
-            excluded.append(ExcludedFeature(column=p.name, reason=reason))
+    numeric, categorical, excluded = select_features(profiles, target_column, leaky)
     if not numeric and not categorical:
         return _unsupported(target_column, "No usable feature columns remain after exclusions.")
     if len(numeric) + len(categorical) > MAX_FEATURES:
         return _unsupported(target_column, f"Label review supports at most {MAX_FEATURES} features.")
 
     rows = labels.index
-    X = pd.DataFrame(index=rows)
-    for c in numeric:
-        X[c] = pd.to_numeric(frame.loc[rows, c], errors="coerce").astype("float64").replace(
-            [np.inf, -np.inf], np.nan
-        )
-    for c in categorical:
-        col = frame.loc[rows, c]
-        X[c] = col.astype(str).where(col.notna(), _MISSING_CATEGORY).astype(object)
+    X = feature_matrix(frame, rows, numeric, categorical)
     y = labels.to_numpy()
-
-    transformers = []
-    if numeric:
-        transformers.append(
-            (
-                "num",
-                Pipeline(
-                    [("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
-                     ("scale", StandardScaler())]
-                ),
-                numeric,
-            )
-        )
-    if categorical:
-        transformers.append(("cat", OneHotEncoder(handle_unknown="ignore"), categorical))
-    model = Pipeline(
-        [
-            ("prep", ColumnTransformer(transformers)),
-            ("clf", LogisticRegression(max_iter=1000)),
-        ]
-    )
+    model = build_model(numeric, categorical)
     cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_SEED)
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always", ConvergenceWarning)

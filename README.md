@@ -80,6 +80,7 @@ number. Instead it reports each category separately and says which checks did no
 | **Data contracts (opt-in)** | Export a contract from a good file (types, nullability, uniqueness, numeric ranges, allowed categories), edit it, and check later files against it; every violation reports a row count and row numbers, never cell values |
 | **Datasheet draft** | Dataset documentation in the style of "Datasheets for Datasets": composition, columns, target and known findings filled in from the analysis (each field records where its value came from), and the questions only a person can answer (motivation, collection, consent, intended uses, maintenance) left empty |
 | **Review log** | Mark each finding *acknowledged*, *accepted risk* or *fixed upstream* with a short note; decisions stay in your browser tab, travel inside the exported JSON and HTML reports, and can be imported back from a JSON report. Nothing is stored on the server |
+| **Model impact (opt-in)** | Measures what problems cost a model on this dataset: the label-review model is trained with and without the features the leakage screen flagged, with and without copies of test rows in training, and with 5%, 10% and 20% of training labels flipped, each scored on the same held-out test set for five fixed seeds; per-seed scores, mean and spread, reproducible run to run |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
 | **Reports** | Strict JSON and a self-contained, script-free HTML report |
 | **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
@@ -340,6 +341,7 @@ are echoed in each result as `dataset.parsing`, so a result records how its file
 | GET | `/api/health` | none | Status, version and active limits |
 | POST | `/api/analyze` | `file`, optional `target_column` | `AnalysisResult` JSON |
 | POST | `/api/report` | `file`, optional `target_column`, `format` (`json`/`html`), `include_values` (`true`/`false`, default `false`), `reviews` (JSON list of review decisions: `finding_code`, `columns`, `status` = `acknowledged`/`accepted_risk`/`fixed_upstream`, `note` up to 280 characters, `decided_at`; at most 500, only those matching a finding are kept) | Report as a download |
+| POST | `/api/model-impact` | `file`, `target_column` (classification) and parsing fields | `ModelImpactResult` JSON |
 | POST | `/api/label-review` | `file`, `target_column` | `LabelReviewResult` JSON |
 | POST | `/api/train-test-overlap` | `train_file`, `test_file`, optional `target_column`, `entity_column`, `time_column` | `TrainTestOverlapResult` JSON |
 | POST | `/api/dataset-diff` | `old_file`, `new_file`, optional `target_column` | `DatasetDiff` JSON |
@@ -423,6 +425,17 @@ match `?`). Excel, PDF, archives and binary files are rejected with a message.
   compared after parsing (`1` and `1.0` in a numeric column are equal), with missing values equal
   to each other. Only repeats are counted, not first occurrences. Medium severity from 5% of rows.
   Duplicates are never removed automatically.
+- **Model-impact experiments** (opt-in, classification targets, up to the label-review row
+  limit). The label-review model is trained under each condition and scored with balanced accuracy
+  on the same 25% held-out test set within each of five fixed seeds (0 to 4); classes with fewer
+  than 10 labeled rows are excluded. *Leakage:* with versus without the features the leakage screen
+  flagged (when no other feature is usable, the comparison is the most-frequent-class baseline).
+  *Duplicates:* with versus without training rows that are exact copies of a test row, so the test
+  set stays identical; not run when that would leave fewer than two classes in training. *Label
+  noise:* 5%, 10% and 20% of training labels flipped uniformly to another class with a seeded
+  generator; test labels are never changed. Every per-seed score, the mean, the sample standard
+  deviation and the range are reported, with no significance test; the same file gives the same
+  numbers.
 - **Near-duplicates.** Rows that differ as stored in the compared columns but are identical after
   normalization: text is Unicode-normalized (NFKC), case-folded, stripped of punctuation and has
   whitespace collapsed; numbers are compared to 6 significant digits; missing values equal each
@@ -569,16 +582,15 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
   warns when balanced accuracy is below 0.7).
 - The server keeps no state: each action re-uploads the file from the browser, so every analysis
   is recomputed.
-- Not implemented: controlled model-impact experiments, Cleanlab-based label analysis, imputation
+- Model-impact experiments cover classification targets only, use one simple model, and measure
+  this dataset; they are not general claims or significance tests.
+- Not implemented: Cleanlab-based label analysis, imputation
   as a correction (imputation belongs inside a training pipeline, fitted on training data only),
   authentication and multi-user deployment.
 
 ## Roadmap
 
-- Reproducible model-impact experiments (for example duplicate contamination across a split, or
-  controlled label noise) with a fixed baseline, an isolated test set and multiple seeds.
 - Optional Cleanlab integration for label issues, once its dependency footprint is justified.
-- Frontend unit tests and an automated browser test in CI.
 
 ## Contributing
 

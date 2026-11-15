@@ -146,7 +146,7 @@ human-only fields are always left blank.
 - Bounded with a `*_LIMIT` constant and blocking to avoid O(n²). Findings are potential issues,
   and each gives example row positions.
 
-## Phase 10 — Reproducible model-impact experiments ☐ *(flagship)*
+## Phase 10 — Reproducible model-impact experiments ☑ *(flagship)*
 
 **Goal:** measure what an issue actually costs a model, instead of asserting it.
 
