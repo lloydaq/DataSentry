@@ -78,6 +78,7 @@ number. Instead it reports each category separately and says which checks did no
 | **Split Doctor (opt-in)** | Recommends a random, stratified, group or time-based split from the target and the entity and time columns you choose, with the evidence: how many rows share an entity, how many test rows a random split would give a known entity, and whether the target changes over time |
 | **Compare versions (opt-in)** | What changed between two exports of a dataset: columns added, removed, possibly renamed or retyped; rows kept, added and dropped; missing-value increases; distribution shift per column (Kolmogorov–Smirnov or population stability index); and which findings are new, resolved or still present |
 | **Data contracts (opt-in)** | Export a contract from a good file (types, nullability, uniqueness, numeric ranges, allowed categories), edit it, and check later files against it; every violation reports a row count and row numbers, never cell values |
+| **Datasheet draft** | Dataset documentation in the style of "Datasheets for Datasets": composition, columns, target and known findings filled in from the analysis (each field records where its value came from), and the questions only a person can answer (motivation, collection, consent, intended uses, maintenance) left empty |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
 | **Reports** | Strict JSON and a self-contained, script-free HTML report |
 | **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
@@ -285,6 +286,7 @@ python -m app.cli check data.csv --contract data.contract.json --format json
 | `--contract FILE` | Also check the file against a data contract; violations are likely issues. The file is then read with the contract's parsing options |
 | `--report FILE` | Write the report (`.json` or `.html`); `--include-values` adds category values |
 | `--result FILE` | Write the raw analysis result as JSON |
+| `--datasheet FILE` | Write a datasheet draft (`.md` or `.json`) |
 | `--format text\|json` | Human summary (default) or a JSON summary on stdout |
 | `--delimiter`, `--encoding`, `--missing-values` | Parsing options, as in the API |
 
@@ -342,6 +344,7 @@ are echoed in each result as `dataset.parsing`, so a result records how its file
 | POST | `/api/dataset-diff` | `old_file`, `new_file`, optional `target_column` | `DatasetDiff` JSON |
 | POST | `/api/contract/export` | `file`, optional `target_column` and parsing fields | `DataContract` JSON |
 | POST | `/api/contract/check` | `file`, `contract` (JSON file, at most 1 MB; the file is read with the contract's parsing options) | `ContractCheckResult` JSON |
+| POST | `/api/datasheet` | `file`, optional `target_column`, `format` (`markdown`, default, or `json`) and parsing fields | Datasheet draft as a download |
 | POST | `/api/split-advice` | `file`, optional `target_column`, `entity_column`, `time_column` | `SplitAdvice` JSON |
 | POST | `/api/corrections/apply` | `file`, `plan` (JSON: `{"approved": true, "target_column": ..., "steps": [{"operation": ..., "columns": [...]}]}`) | Corrected CSV text and audit record |
 

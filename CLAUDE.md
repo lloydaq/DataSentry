@@ -45,6 +45,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/target.py` | Target task inference, class distribution, label conflicts |
 | `app/services/leakage.py` | Single-feature leakage screen; train/test overlap, including entity and time-order checks |
 | `app/services/contract.py` | Data contracts: export from a dataset; strict parsing of untrusted contracts; per-value checks |
+| `app/services/datasheet.py` | Datasheet draft: facts from the analysis with source paths, person-only questions always empty; Markdown with dataset text escaped |
 | `app/services/diff.py` | Dataset diff between two versions: schema, rows, shift (KS/PSI), missing values, finding changes |
 | `app/services/splits.py` | Split Doctor: opt-in split-strategy advice from target, entity and time columns |
 | `app/services/findings.py` | Rules turning observations into findings; qualitative summary (no score) |
@@ -64,7 +65,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5) and the quality gate CLI (phase 6).
+corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6) and the datasheet draft (phase 7).
 
 Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
 imputation as a correction, near-duplicate detection, non-CSV formats, authentication. Build them

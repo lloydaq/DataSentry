@@ -326,7 +326,7 @@ async function rerun(target) {
 function setDashboardBusy(busy) {
   state.busy = busy;
   $("dashboard-busy").hidden = !busy;
-  for (const id of ["run-target", "download-json", "download-html", "new-analysis", "run-split", "export-contract"]) {
+  for (const id of ["run-target", "download-json", "download-html", "download-datasheet", "new-analysis", "run-split", "export-contract"]) {
     $(id).disabled = busy;
   }
   $("run-label-review").disabled = busy || !canReviewLabels();
@@ -1254,6 +1254,22 @@ async function downloadReport(format) {
   }
 }
 
+// A datasheet draft: facts from the analysis, plus empty questions for the person who knows the data.
+async function downloadDatasheet() {
+  if (state.busy) return;
+  setDashboardBusy(true);
+  try {
+    const response = await post("/api/datasheet", baseForm({ format: "markdown" }));
+    const stem = state.result.dataset.filename.replace(/\.csv$/i, "");
+    downloadBlob(await response.blob(), filenameFrom(response, `datasentry-datasheet-${stem}.md`));
+    toast("Datasheet draft downloaded. Complete the questions only you can answer.");
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    setDashboardBusy(false);
+  }
+}
+
 // --- Tabs ----------------------------------------------------------------------------------
 
 function selectTab(id) {
@@ -1381,6 +1397,7 @@ function init() {
   $("new-analysis").addEventListener("click", resetToUpload);
   $("download-json").addEventListener("click", () => downloadReport("json"));
   $("download-html").addEventListener("click", () => downloadReport("html"));
+  $("download-datasheet").addEventListener("click", downloadDatasheet);
   for (const id of ["finding-search", "filter-severity", "filter-category", "filter-kind", "sort-findings"]) {
     $(id).addEventListener(id === "finding-search" ? "input" : "change", renderFindings);
   }

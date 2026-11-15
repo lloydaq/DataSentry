@@ -113,7 +113,7 @@ violation type has a test.
 **Done when:** exit codes are tested for clean, warning and failing datasets, and output matches
 the API result exactly.
 
-## Phase 7 — Datasheet draft ☐ *(distinctive)*
+## Phase 7 — Datasheet draft ☑ *(distinctive)*
 
 **Goal:** speed up dataset documentation without pretending to know what only humans know.
 
