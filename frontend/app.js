@@ -23,6 +23,7 @@ const state = {
   result: null,
   selectedColumn: null,
   busy: false,
+  reviews: new Map(), // finding key -> review decision (this tab only; exported inside reports)
 };
 
 const $ = (id) => document.getElementById(id);
@@ -340,6 +341,7 @@ function canReviewLabels() {
 
 function showDashboard(result, { keepTab = false } = {}) {
   state.result = result;
+  loadReviews();
   $("upload-view").hidden = true;
   $("dashboard").hidden = false;
   $("new-analysis").hidden = false;
@@ -394,7 +396,9 @@ function renderSummary(r) {
   $("summary-headline").textContent = s.headline;
   put(clear($("severity-counts")),
     ...s.severity_counts.map((c) =>
-      h("span", { class: `pill dot ${c.count ? `sev-${c.severity}` : "is-zero"}` }, `${c.count} ${c.severity}`)));
+      h("div", { class: "sev-count", "data-sev": c.count ? c.severity : "zero" },
+        h("span", { class: "sev-count-value", text: fmtInt(c.count) }),
+        h("span", { class: "sev-count-label", text: c.severity }))));
   put(clear($("not-evaluated")), ...s.not_evaluated.map((n) => h("li", { text: n })));
   $("score-policy").textContent = s.score_policy;
   put(clear($("category-grid")), ...s.categories.map((c) =>
@@ -480,6 +484,7 @@ function renderFindings() {
     items = [...items].sort((a, b) => (a.columns[0] || "￿").localeCompare(b.columns[0] || "￿"));
   }
   const list = clear($("findings-list"));
+  updateReviewCount();
   if (!r.findings.length) {
     put(list, emptyState("No findings. The checks that ran found nothing to report; see the summary for checks that did not run."));
     return;
@@ -488,7 +493,122 @@ function renderFindings() {
     put(list, emptyState("No findings match these filters."));
     return;
   }
-  items.forEach((f, i) => put(list, findingCard(f, `finding-${i}`)));
+  items.forEach((f, i) => put(list, findingCard(f, `finding-${i}`, { reviewable: true })));
+  updateReviewCount();
+}
+
+// --- Review decisions ------------------------------------------------------------------------
+// A person's decisions about findings live only in this tab (sessionStorage, keyed by the file's
+// hash) and leave the browser only inside an exported report. Notes are untrusted text.
+
+const REVIEW_STATUS = { acknowledged: "Acknowledged", accepted_risk: "Accepted risk", fixed_upstream: "Fixed upstream" };
+const REVIEW_NOTE_MAX = 280; // mirrors FindingReview.note on the server
+const REVIEW_PAYLOAD_MAX = 60000; // form text fields are capped at 64 KB by the server
+const REVIEW_IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+const reviewKey = (code, columns) => JSON.stringify([code, columns]);
+const reviewStorageKey = () => `datasentry-reviews:${state.result.dataset.sha256}`;
+
+// Untrusted JSON (storage or an imported file): keep only well-formed decisions, copied field by field.
+function validReviews(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter((r) => r && typeof r === "object"
+    && typeof r.finding_code === "string" && r.finding_code.length >= 1 && r.finding_code.length <= 100
+    && Array.isArray(r.columns) && r.columns.length <= 500 && r.columns.every((c) => typeof c === "string")
+    && Object.hasOwn(REVIEW_STATUS, r.status)
+    && typeof r.note === "string" && r.note.length <= REVIEW_NOTE_MAX
+    && typeof r.decided_at === "string" && r.decided_at.length >= 1 && r.decided_at.length <= 40)
+    .map((r) => ({ finding_code: r.finding_code, columns: [...r.columns], status: r.status, note: r.note, decided_at: r.decided_at }));
+}
+
+function loadReviews() {
+  state.reviews = new Map();
+  try {
+    for (const r of validReviews(JSON.parse(sessionStorage.getItem(reviewStorageKey()) || "[]"))) {
+      state.reviews.set(reviewKey(r.finding_code, r.columns), r);
+    }
+  } catch {
+    // Storage unavailable or unreadable: start with no decisions.
+  }
+}
+
+function saveReviews() {
+  try {
+    sessionStorage.setItem(reviewStorageKey(), JSON.stringify([...state.reviews.values()]));
+  } catch {
+    // Not persisted when storage is unavailable; decisions still apply until the tab closes.
+  }
+}
+
+// Decisions for this analysis's findings, in finding order (what an exported report carries).
+function currentReviews() {
+  return state.result.findings
+    .map((f) => state.reviews.get(reviewKey(f.code, f.columns)))
+    .filter(Boolean);
+}
+
+function updateReviewCount() {
+  const n = currentReviews().length;
+  $("review-count").textContent = state.result.findings.length
+    ? `${n} of ${state.result.findings.length} findings reviewed`
+    : "";
+}
+
+function reviewEditor(f, id, tag) {
+  const key = reviewKey(f.code, f.columns);
+  const current = state.reviews.get(key);
+  const select = h("select", { class: "input", id: `${id}-review`, "aria-label": "Review decision" },
+    h("option", { value: "", text: "Not reviewed" }),
+    Object.entries(REVIEW_STATUS).map(([value, text]) => h("option", { value, text })));
+  select.value = current?.status || "";
+  const note = h("textarea", {
+    class: "input review-note", rows: 2, maxlength: REVIEW_NOTE_MAX, "aria-label": "Review note (optional)",
+    placeholder: "Why? (optional, saved only in this report)",
+  });
+  note.value = current?.note || "";
+  const save = () => {
+    if (!select.value) {
+      state.reviews.delete(key);
+    } else {
+      state.reviews.set(key, {
+        finding_code: f.code, columns: [...f.columns], status: select.value,
+        note: note.value.slice(0, REVIEW_NOTE_MAX), decided_at: new Date().toISOString().slice(0, 19) + "Z",
+      });
+    }
+    saveReviews();
+    paintReviewTag(tag, state.reviews.get(key));
+    updateReviewCount();
+    toast(select.value ? `Decision saved: ${REVIEW_STATUS[select.value].toLowerCase()}.` : "Decision removed.");
+  };
+  return h("div", { class: "review-editor" },
+    select, note,
+    h("button", { type: "button", class: "btn btn-small", onclick: save }, "Save decision"));
+}
+
+function paintReviewTag(tag, review) {
+  tag.hidden = !review;
+  tag.textContent = review ? `Reviewed · ${REVIEW_STATUS[review.status]}${review.note ? ` · ${review.note}` : ""}` : "";
+}
+
+async function importReviews(file) {
+  if (file.size === 0 || file.size > REVIEW_IMPORT_MAX_BYTES || !/\.json$/i.test(file.name)) {
+    toast(`Choose a DataSentry JSON report of at most ${fmtBytes(REVIEW_IMPORT_MAX_BYTES)}.`);
+    return;
+  }
+  const doc = parseJson(await file.text());
+  const imported = validReviews(Array.isArray(doc) ? doc : doc?.reviews);
+  if (!imported.length) {
+    toast("No review decisions were found in that file.");
+    return;
+  }
+  const keys = new Set(state.result.findings.map((f) => reviewKey(f.code, f.columns)));
+  const matched = imported.filter((r) => keys.has(reviewKey(r.finding_code, r.columns)));
+  for (const r of matched) state.reviews.set(reviewKey(r.finding_code, r.columns), r);
+  saveReviews();
+  renderFindings();
+  const otherFile = doc?.analysis?.dataset?.sha256 && doc.analysis.dataset.sha256 !== state.result.dataset.sha256;
+  toast(`Imported ${matched.length} decision(s)` +
+    (imported.length > matched.length ? `; ${imported.length - matched.length} did not match a finding` : "") +
+    (otherFile ? ". The report was made from a different file." : "."));
 }
 
 function columnChip(name) {
@@ -500,8 +620,10 @@ function columnChip(name) {
   }, name);
 }
 
-function findingCard(f, id) {
+function findingCard(f, id, { reviewable = false } = {}) {
   const bodyId = `${id}-body`;
+  const reviewTag = h("div", { class: "finding-review", hidden: true });
+  if (reviewable) paintReviewTag(reviewTag, state.reviews.get(reviewKey(f.code, f.columns)));
   const body = h("div", { class: "finding-body", id: bodyId, hidden: true },
     h("dl", { class: "detail-list" },
       h("dt", { text: "What was found" }), h("dd", { text: f.explanation }),
@@ -518,7 +640,8 @@ function findingCard(f, id) {
       h("dt", { text: "Finding code" }), h("dd", {}, h("code", { text: f.code })),
       f.correction ? [h("dt", { text: "Correction" }), h("dd", {},
         h("button", { type: "button", class: "btn btn-small", onclick: () => selectTab("tab-corrections") },
-          "Review proposed correction"))] : null));
+          "Review proposed correction"))] : null,
+      reviewable ? [h("dt", { text: "Your decision" }), h("dd", {}, reviewEditor(f, id, reviewTag))] : null));
   const head = h("button", {
     type: "button", class: "finding-head", "aria-expanded": "false", "aria-controls": bodyId,
     onclick: () => {
@@ -530,7 +653,8 @@ function findingCard(f, id) {
   h("div", {},
     h("div", { class: "finding-tags" }, severityPill(f.severity), kindPill(f.kind), pill(label(f.category), "pill-outline")),
     h("div", { class: "finding-title", text: f.title }),
-    h("div", { class: "finding-sub", text: f.explanation })),
+    h("div", { class: "finding-sub", text: f.explanation }),
+    reviewTag),
   chevron());
   return h("article", { class: `finding sev-border-${f.severity}` }, head, body);
 }
@@ -1093,7 +1217,7 @@ async function runContractCheck(contractFile) {
     const res = await (await post("/api/contract/check", form)).json();
     put(clear(out), h("div", { class: "card" },
       h("p", { class: "split-verdict" },
-        h("span", { class: `pill ${res.passed ? "pill-outline" : "dot sev-high"}`, text: res.passed ? "Passed" : "Failed" }),
+        h("span", { class: `status-pill ${res.passed ? "st-pass" : "st-issue"}`, text: res.passed ? "Passed" : "Failed" }),
         h("span", { text: res.passed
           ? `The file meets all ${fmtInt(res.n_rules_checked)} contract rules.`
           : `${fmtInt(res.violations.length)} rule(s) broken out of ${fmtInt(res.n_rules_checked)} checked.` })),
@@ -1242,6 +1366,15 @@ async function downloadReport(format) {
   setDashboardBusy(true);
   try {
     const form = baseForm({ format, include_values: $("include-values").checked ? "true" : "false" });
+    const reviews = currentReviews();
+    if (reviews.length) {
+      const payload = JSON.stringify(reviews);
+      if (payload.length > REVIEW_PAYLOAD_MAX) {
+        toast("Too many or too long review notes to include in a report. Shorten some notes and try again.");
+        return;
+      }
+      form.set("reviews", payload);
+    }
     const response = await post("/api/report", form);
     const stem = state.result.dataset.filename.replace(/\.csv$/i, "");
     downloadBlob(await response.blob(), filenameFrom(response, `datasentry-report-${stem}.${format}`));
@@ -1404,6 +1537,10 @@ function init() {
   $("run-target").addEventListener("click", () => rerun($("target-select").value || null));
   $("run-label-review").addEventListener("click", runLabelReview);
   $("split-form").addEventListener("submit", runSplitAdvice);
+  $("review-import").addEventListener("change", async (e) => {
+    if (e.target.files[0]) await importReviews(e.target.files[0]);
+    e.target.value = "";
+  });
   $("export-contract").addEventListener("click", exportContract);
   $("contract-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runContractCheck(e.target.files[0]); });
   $("previous-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runCompare(e.target.files[0]); });

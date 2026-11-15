@@ -1,0 +1,474 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T07:27:32+00:00",
+  "title": "Design System: DataSentry",
+  "extensions": {
+    "colorMeta": {
+      "dark-azure": {
+        "role": "primary",
+        "displayName": "Dark Azure",
+        "canonical": "oklch(47.3% 0.103 236.9)",
+        "tonalRamp": [
+          "#000d19",
+          "#00273c",
+          "#014565",
+          "#046590",
+          "#3686b3",
+          "#5aa8d6",
+          "#80ceff",
+          "#def2ff"
+        ]
+      },
+      "azure-deep": {
+        "role": "primary",
+        "displayName": "Azure Deep",
+        "canonical": "oklch(38.7% 0.084 236.5)",
+        "tonalRamp": [
+          "#000d18",
+          "#01273b",
+          "#054563",
+          "#266487",
+          "#4885a9",
+          "#69a7cc",
+          "#8fcdf4",
+          "#dff2fe"
+        ]
+      },
+      "azure-steel": {
+        "role": "primary",
+        "displayName": "Azure Steel",
+        "canonical": "oklch(76.0% 0.055 225.8)",
+        "tonalRamp": [
+          "#000e16",
+          "#002937",
+          "#1a4656",
+          "#396475",
+          "#598496",
+          "#7aa6b9",
+          "#9fcce0",
+          "#daf3fe"
+        ]
+      },
+      "light-azure": {
+        "role": "primary",
+        "displayName": "Light Azure",
+        "canonical": "oklch(86.7% 0.031 226.1)",
+        "tonalRamp": [
+          "#000e15",
+          "#13272f",
+          "#2e434c",
+          "#4b626b",
+          "#6a818b",
+          "#8ba3ad",
+          "#b0c9d4",
+          "#daf3ff"
+        ]
+      },
+      "onyx-secondary": {
+        "role": "neutral",
+        "displayName": "Onyx Secondary",
+        "canonical": "oklch(19.1% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "ink-tertiary": {
+        "role": "neutral",
+        "displayName": "Ink Tertiary",
+        "canonical": "oklch(50.0% 0.013 252.2)",
+        "tonalRamp": [
+          "#070c11",
+          "#1f252a",
+          "#3b4047",
+          "#585e65",
+          "#787e85",
+          "#999fa7",
+          "#bec5cd",
+          "#e8eff7"
+        ]
+      },
+      "severity-high": {
+        "role": "semantic",
+        "displayName": "Severity High",
+        "canonical": "oklch(50.0% 0.182 29.5)",
+        "tonalRamp": [
+          "#200000",
+          "#4a0302",
+          "#790d07",
+          "#ad1a10",
+          "#d44536",
+          "#fb6957",
+          "#fbada1",
+          "#ffe9e5"
+        ]
+      },
+      "severity-medium": {
+        "role": "semantic",
+        "displayName": "Severity Medium",
+        "canonical": "oklch(50.1% 0.128 52.5)",
+        "tonalRamp": [
+          "#1a0500",
+          "#3c1900",
+          "#642f03",
+          "#8f470a",
+          "#b76429",
+          "#dc864d",
+          "#fcb081",
+          "#ffeadd"
+        ]
+      },
+      "status-pass": {
+        "role": "semantic",
+        "displayName": "Status Pass",
+        "canonical": "oklch(51.1% 0.110 158.4)",
+        "tonalRamp": [
+          "#001006",
+          "#002d18",
+          "#004d2e",
+          "#047045",
+          "#379164",
+          "#5cb385",
+          "#82daa9",
+          "#c6fedd"
+        ]
+      },
+      "paper-white": {
+        "role": "neutral",
+        "displayName": "Paper White"
+      },
+      "onyx": {
+        "role": "neutral",
+        "displayName": "Onyx"
+      },
+      "charcoal": {
+        "role": "neutral",
+        "displayName": "Charcoal"
+      },
+      "azure-mist": {
+        "role": "neutral",
+        "displayName": "Azure Mist"
+      },
+      "azure-mist-strong": {
+        "role": "neutral",
+        "displayName": "Azure Mist Strong"
+      },
+      "lifted-onyx": {
+        "role": "neutral",
+        "displayName": "Lifted Onyx"
+      },
+      "azure-wash": {
+        "role": "primary",
+        "displayName": "Azure Wash"
+      },
+      "night-azure-wash": {
+        "role": "primary",
+        "displayName": "Night Azure Wash"
+      },
+      "night-azure-hover": {
+        "role": "primary",
+        "displayName": "Night Azure Hover"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline"
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Hairline Strong"
+      },
+      "night-hairline-strong": {
+        "role": "neutral",
+        "displayName": "Night Hairline Strong"
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary"
+      },
+      "night-ink-secondary": {
+        "role": "neutral",
+        "displayName": "Night Ink Secondary"
+      },
+      "night-ink-tertiary": {
+        "role": "neutral",
+        "displayName": "Night Ink Tertiary"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing headline only, white on the hero gradient."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Dashboard file name; the summary verdict is a sibling step."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Severity counts, stat values and single-figure results; tabular."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, finding titles, brand name."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Landing explainer under the headline."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Sentence-case meta text, stat labels, kind/category/flags."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Dataset strings and machine identifiers only."
+      }
+    },
+    "themeTokens": {
+      "mechanism": "Every colour is a CSS custom property defined once with light-dark(); color-scheme selects the branch. data-theme='light' or 'dark' on <html>, set by theme.js before first paint from localStorage key 'datasentry-theme', overrides the OS preference.",
+      "source": "frontend/style.css :root"
+    },
+    "gradients": [
+      {
+        "name": "brand-gradient",
+        "value": "linear-gradient(110deg, #000000 0%, #004a6b 38%, #00638e 64%, #8cb9cc 100%)",
+        "purpose": "Landing hero panel (165deg when stacked below 900px) and brand mark only."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "thumb-lift",
+        "value": "0 1px 2px light-dark(rgba(20,20,20,0.12), rgba(0,0,0,0.5))",
+        "purpose": "Theme switch thumb only."
+      },
+      {
+        "name": "float",
+        "value": "0 12px 32px light-dark(rgba(20,20,20,0.14), rgba(0,0,0,0.6))",
+        "purpose": "Toast only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Exponential ease-out for every reveal and state change."
+      },
+      {
+        "name": "t-fast",
+        "value": "160ms",
+        "purpose": "Hover, colour, border and press transitions."
+      },
+      {
+        "name": "t-base",
+        "value": "240ms",
+        "purpose": "Rise reveals (dashboard, tab panels, finding bodies, toast), tab underline, chevrons, theme cross-fade."
+      },
+      {
+        "name": "theme-thumb",
+        "value": "320ms",
+        "purpose": "Segmented theme thumb slide."
+      },
+      {
+        "name": "rise",
+        "value": "opacity 0 to 1, translateY(6px) to 0",
+        "purpose": "Panel and detail reveals; the toast rises 8px."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none; transition: none",
+        "purpose": "Applied to everything under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "hero-ease",
+        "value": "1024px"
+      },
+      {
+        "name": "single-column",
+        "value": "900px"
+      },
+      {
+        "name": "phone",
+        "value": "560px"
+      },
+      {
+        "name": "form-stack",
+        "value": "480px"
+      },
+      {
+        "name": "coarse-pointer",
+        "value": "(pointer: coarse)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action per view (Download HTML report).",
+      "html": "<button class=\"ds-btn-primary\">Download HTML report</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:0 16px; border-radius:var(--r-control,10px); border:1px solid var(--accent,#00638e); background:var(--accent,#00638e); color:#fff; font:550 14px/1 var(--font,system-ui); cursor:pointer; transition:background-color 160ms ease, border-color 160ms ease, transform 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { background:var(--accent-hover,#004a6b); border-color:var(--accent-hover,#004a6b); } .ds-btn-primary:active { transform:scale(0.98); } .ds-btn-primary:focus-visible { outline:2px solid var(--accent-ink,#00638e); outline-offset:2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default outlined button for secondary actions and sample data.",
+      "html": "<button class=\"ds-btn-secondary\">Download JSON</button>",
+      "css": ".ds-btn-secondary { display:inline-flex; align-items:center; min-height:38px; padding:0 16px; border-radius:var(--r-control,10px); border:1px solid var(--line-strong,#c8cdd2); background:var(--surface,#fff); color:var(--text,#141414); font:550 14px/1 var(--font,system-ui); cursor:pointer; transition:background-color 160ms ease, transform 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-secondary:hover { background:var(--surface-3,#e2eef3); } .ds-btn-secondary:active { transform:scale(0.98); } .ds-btn-secondary:focus-visible { outline:2px solid var(--accent-ink,#00638e); outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Borderless top-bar action (New analysis).",
+      "html": "<button class=\"ds-btn-ghost\">New analysis</button>",
+      "css": ".ds-btn-ghost { display:inline-flex; align-items:center; min-height:38px; padding:0 16px; border-radius:var(--r-control,10px); border:1px solid transparent; background:transparent; color:var(--text-2,#454a50); font:550 14px/1 var(--font,system-ui); cursor:pointer; transition:background-color 160ms ease, color 160ms ease; } .ds-btn-ghost:hover { background:var(--surface-2,#eef5f8); color:var(--text,#141414); } .ds-btn-ghost:focus-visible { outline:2px solid var(--accent-ink,#00638e); outline-offset:2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Hairline field with an accent ring on focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Extra missing-value tokens</span><input class=\"ds-input\" placeholder=\"e.g. ?, -999, unknown\"></label>",
+      "css": ".ds-field { display:grid; gap:6px; } .ds-field-label { font:600 13px/1.3 var(--font,system-ui); } .ds-input { min-height:40px; padding:0 12px; border:1px solid var(--line-strong,#c8cdd2); border-radius:var(--r-input,12px); background:var(--surface,#fff); color:var(--text,#141414); font:400 14px var(--font,system-ui); transition:border-color 160ms ease, box-shadow 160ms ease; } .ds-input::placeholder { color:var(--text-3,#5e646b); } .ds-input:hover { border-color:color-mix(in srgb, var(--accent-ink,#00638e) 40%, var(--line-strong,#c8cdd2)); } .ds-input:focus-visible { outline:none; border-color:var(--accent-ink,#00638e); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent-ink,#00638e) 22%, transparent); }"
+    },
+    {
+      "name": "Theme Switch",
+      "kind": "nav",
+      "refersTo": "theme-switch",
+      "description": "Segmented System/Light/Dark control; a solid thumb slides to the checked option.",
+      "html": "<div class=\"ds-seg\" role=\"radiogroup\" aria-label=\"Color theme\"><span class=\"ds-seg-thumb\"></span><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-theme\" value=\"system\" checked>System</label><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-theme\" value=\"light\">Light</label><label class=\"ds-seg-opt\"><input type=\"radio\" name=\"ds-theme\" value=\"dark\">Dark</label></div>",
+      "css": ".ds-seg { position:relative; isolation:isolate; display:inline-grid; grid-template-columns:repeat(3,1fr); padding:3px; border-radius:var(--r-control,10px); background:var(--surface-2,#eef5f8); border:1px solid var(--line,#e3e6e9); } .ds-seg input { position:absolute; opacity:0; width:1px; height:1px; margin:0; } .ds-seg-opt { position:relative; z-index:1; display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:0 10px; border-radius:7px; color:var(--text-2,#454a50); font:500 12.5px var(--font,system-ui); cursor:pointer; transition:color 160ms ease; } .ds-seg-opt:hover, .ds-seg-opt:has(input:checked) { color:var(--text,#141414); } .ds-seg-opt:has(input:focus-visible) { outline:2px solid var(--accent-ink,#00638e); } .ds-seg-thumb { position:absolute; z-index:0; top:3px; bottom:3px; left:3px; width:calc((100% - 6px) / 3); border-radius:7px; background:light-dark(#ffffff,#2b2b2b); box-shadow:0 1px 2px light-dark(rgba(20,20,20,0.12), rgba(0,0,0,0.5)); transition:transform 320ms cubic-bezier(0.16,1,0.3,1); } .ds-seg:has([value=light]:checked) .ds-seg-thumb { transform:translateX(100%); } .ds-seg:has([value=dark]:checked) .ds-seg-thumb { transform:translateX(200%); }"
+    },
+    {
+      "name": "Severity and Status Pills",
+      "kind": "chip",
+      "refersTo": "pill-severity-high",
+      "description": "The only pill shape: semantic colour on its wash with a dot, always beside the word.",
+      "html": "<span class=\"ds-pill ds-high\">high</span> <span class=\"ds-pill ds-medium\">medium</span> <span class=\"ds-pill ds-low\">low</span> <span class=\"ds-pill ds-pass\">No issues detected</span>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:3px 10px; font:600 12px/1.4 var(--font,system-ui); white-space:nowrap; } .ds-pill::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; } .ds-high { color:var(--high,#b42318); background:var(--high-soft,#fdeceb); } .ds-medium { color:var(--medium,#9a4a00); background:var(--medium-soft,#fcf0e4); } .ds-low { color:var(--low,#00638e); background:var(--low-soft,#e3eff5); } .ds-pass { color:var(--ok,#18794e); background:var(--ok-soft,#e4f3ea); }"
+    },
+    {
+      "name": "Dataset Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Monospace chip holding a dataset string; the clickable variant takes the accent on hover.",
+      "html": "<button class=\"ds-chip\">cancellation_code</button><span class=\"ds-chip\">churned</span>",
+      "css": ".ds-chip { display:inline-flex; align-items:center; padding:1px 8px; margin:0 4px 4px 0; border-radius:var(--r-chip,8px); border:1px solid var(--line,#e3e6e9); background:var(--surface-2,#eef5f8); color:var(--text,#141414); font:400 12px/1.5 var(--mono,ui-monospace,monospace); white-space:nowrap; transition:border-color 160ms ease, color 160ms ease; } button.ds-chip { cursor:pointer; } button.ds-chip:hover { border-color:var(--accent-ink,#00638e); color:var(--accent-ink,#00638e); } button.ds-chip:focus-visible { outline:2px solid var(--accent-ink,#00638e); outline-offset:2px; }"
+    },
+    {
+      "name": "Finding Card",
+      "kind": "card",
+      "refersTo": "finding-card",
+      "description": "Collapsible finding: severity pill, meta text, title; the border takes a faint tint of the severity.",
+      "html": "<article class=\"ds-finding\"><div class=\"ds-finding-head\"><div class=\"ds-tags\"><span class=\"ds-pill ds-high\">high</span><span class=\"ds-meta\">potential issue</span><span class=\"ds-meta\">leakage</span></div><div class=\"ds-finding-title\">Feature 'cancellation_code' almost perfectly predicts the target</div><div class=\"ds-finding-sub\">Knowing this feature's value removes 93.9% of the errors made by always guessing the majority class.</div></div></article>",
+      "css": ".ds-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:3px 10px; font:600 12px/1.4 var(--font,system-ui); white-space:nowrap; } .ds-pill::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; } .ds-high { color:var(--high,#b42318); background:var(--high-soft,#fdeceb); } .ds-finding { --sev:var(--high,#b42318); background:var(--surface,#fff); border-radius:16px; border:1px solid color-mix(in srgb, var(--sev) 24%, var(--line,#e3e6e9)); transition:border-color 160ms ease; } .ds-finding:hover { border-color:color-mix(in srgb, var(--sev) 40%, var(--line-strong,#c8cdd2)); } .ds-finding-head { padding:14px 18px; } .ds-tags { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px; } .ds-meta { color:var(--text-3,#5e646b); font:500 12.5px var(--font,system-ui); } .ds-meta + .ds-meta::before { content:'\\00b7'; margin-right:6px; } .ds-finding-title { font:600 15px/1.35 var(--font,system-ui); letter-spacing:-0.01em; } .ds-finding-sub { color:var(--text-2,#454a50); font-size:13.5px; margin-top:2px; }"
+    },
+    {
+      "name": "Severity Breakdown",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Four hairline-divided readouts: a 28px numeral above the severity word with its coloured dot.",
+      "html": "<div class=\"ds-sev\"><div class=\"ds-sev-cell ds-sev-high\"><span class=\"ds-sev-num\">2</span><span class=\"ds-sev-word\">high</span></div><div class=\"ds-sev-cell ds-sev-medium\"><span class=\"ds-sev-num\">5</span><span class=\"ds-sev-word\">medium</span></div><div class=\"ds-sev-cell ds-sev-low\"><span class=\"ds-sev-num\">4</span><span class=\"ds-sev-word\">low</span></div><div class=\"ds-sev-cell ds-zero\"><span class=\"ds-sev-num\">0</span><span class=\"ds-sev-word\">info</span></div></div>",
+      "css": ".ds-sev { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); border-top:1px solid var(--line,#e3e6e9); border-bottom:1px solid var(--line,#e3e6e9); } .ds-sev-cell { --dot:var(--text-3,#5e646b); display:grid; gap:2px; padding:14px 0 14px 16px; border-left:1px solid var(--line,#e3e6e9); } .ds-sev-cell:first-child { padding-left:0; border-left:0; } .ds-sev-high { --dot:var(--high,#b42318); } .ds-sev-medium { --dot:var(--medium,#9a4a00); } .ds-sev-low { --dot:var(--low,#00638e); } .ds-sev-num { font:600 28px/1.1 var(--font-display,system-ui); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; } .ds-zero .ds-sev-num { color:var(--text-3,#5e646b); } .ds-sev-word { display:inline-flex; align-items:center; gap:6px; color:var(--text-2,#454a50); font-size:12.5px; text-transform:capitalize; } .ds-sev-word::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--dot); }"
+    },
+    {
+      "name": "Hero Panel",
+      "kind": "custom",
+      "refersTo": "hero-panel",
+      "description": "The one branded surface: static gradient panel with white display type.",
+      "html": "<section class=\"ds-hero\"><h1>Find data problems before they reach your model.</h1><p>DataSentry profiles a CSV file on your machine and explains what it finds.</p></section>",
+      "css": ".ds-hero { padding:56px; border-radius:var(--r-feature,32px); background:linear-gradient(110deg, #000000 0%, #004a6b 38%, #00638e 64%, #8cb9cc 100%); color:#ffffff; border:1px solid light-dark(transparent,#2b2b2b); } .ds-hero h1 { margin:0 0 20px; max-width:14ch; font:600 clamp(36px,5vw,60px)/1.05 var(--font-display,system-ui); letter-spacing:-0.03em; } .ds-hero p { margin:0; max-width:46ch; color:rgba(255,255,255,0.82); font-size:18px; line-height:1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calm Instrument",
+    "overview": "The tool is the product page. DataSentry is a calm, high-contrast instrument where evidence reads first: Paper White or pure Onyx grounds, hairline-divided surfaces, one azure action colour, and numbers set large enough to be read at a glance. It rejects the generic developer dashboard (grey cards, scattered accents, animated backdrops) and it rejects marketing gloss inside working screens.\n\nExactly one surface is branded: the landing hero panel, a static 32px-radius gradient field from Onyx through deep and Dark Azure to Azure Steel, holding the pitch and the upload card. Everything past the upload is the working instrument, flat and hairline-ruled, recoloured in place between a light and a dark theme. The background never moves; motion exists only to explain a change (a panel arriving, a detail opening, a toast confirming), uses opacity and a few pixels of translate, and disappears entirely under reduced motion.\n\nDensity is moderate and reading-led: 14.5px body, a page up to 1680px wide, cards that breathe at 22px, and tabular numerals wherever values are compared. Dataset strings (column names, values, finding codes) are the only monospace text, so the user's data is always visually distinct from the interface's voice.",
+    "keyCharacteristics": [
+      "One branded surface (landing hero panel and brand mark); every working screen is flat and ruled.",
+      "Dark Azure is the single action fill; its readable text form flips to Azure Steel on dark grounds.",
+      "Hairline borders and tonal steps carry structure; shadows are reserved for two floating objects.",
+      "Severity and status colour is semantic, always paired with its word, and the only use of the pill shape.",
+      "Light and dark themes are equals, chosen by a System/Light/Dark segmented control.",
+      "Static background; short exponential ease-out reveals; nothing continuous except progress."
+    ],
+    "rules": [
+      {
+        "name": "The Single Action Rule",
+        "body": "Dark Azure is the only fill that means \"act\". Never introduce a second accent hue; severity colours are markers, not actions.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Branded Surface Rule",
+        "body": "The branding gradient (Onyx → Azure Deep → Dark Azure → Azure Steel) appears only on the landing hero panel and the brand mark. Working screens never carry it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Accent Rule",
+        "body": "Accent text, rules and data marks use Dark Azure on light grounds and Azure Steel on dark grounds. Dark Azure text on Onyx is never acceptable.",
+        "section": "colors"
+      },
+      {
+        "name": "The Word-Beside-Colour Rule",
+        "body": "Every severity or status colour appears next to its word (\"high\", \"Issues detected\"). Colour alone never carries meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The Data Is Mono Rule",
+        "body": "Monospace is reserved for strings that come from the dataset or are machine identifiers. Interface copy is never monospace.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Every number that sits next to another number (stats, counts, table cells, bars, file meta) uses tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence-Case Label Rule",
+        "body": "Labels are small, sentence-case and tertiary-coloured. No uppercase tracked labels anywhere.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Decorative Shadow Rule",
+        "body": "Cards, panels, buttons, the hero and the upload card are shadowless. A new shadow needs a new floating object to justify it.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Static Ground Rule",
+        "body": "The background is a flat colour (or the static hero gradient). No canvas, particles, grids or animated backdrops.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use Dark Azure (#00638E) as the only action fill, and Azure Steel (#8CB9CC) for accent text and marks on dark grounds.",
+      "**Do** pair every severity or status colour with its word, as a pill or as a dot beside the word.",
+      "**Do** separate grouped readouts with 1px internal hairlines instead of boxing each value.",
+      "**Do** follow the radius ladder (8 / 10 / 12 / 16 / 18 / 24 / 32px), larger containers taking larger radii.",
+      "**Do** set dataset strings in monospace and insert them as text; set compared numbers in tabular figures.",
+      "**Do** design every screen in both themes; dark grounds are pure Onyx with Onyx Secondary and Charcoal surfaces.",
+      "**Do** keep motion to 160ms/240ms exponential ease-out opacity and small translate, all removed under reduced motion."
+    ],
+    "donts": [
+      "**Don't** use the branding gradient anywhere but the landing hero panel and the brand mark.",
+      "**Don't** give kind, category or column flags the pill shape; only severity and status are pills.",
+      "**Don't** add decorative shadows; only the theme thumb and the toast float.",
+      "**Don't** add animated or textured backgrounds (canvas grids, particles, moving gradients).",
+      "**Don't** load web fonts or external assets; the type must hold up in SF Pro and Segoe UI.",
+      "**Don't** set Dark Azure text on Onyx or Onyx Secondary; switch to Azure Steel.",
+      "**Don't** use uppercase tracked labels or eyebrow lines above headings."
+    ]
+  }
+}

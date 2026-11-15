@@ -185,6 +185,43 @@ async function main() {
     check(await evaluate(`!document.querySelector("#overlap-results .alert-error")
       && /Test rows found in train/.test(document.getElementById("overlap-results").textContent)`), "train/test overlap shows its result");
 
+    console.log("Review log");
+    const note = "<b>known</b> & accepted";
+    await evaluate(`(() => {
+      document.getElementById("tab-findings").click();
+      const card = document.querySelector("#findings-list .finding");
+      const head = card.querySelector(".finding-head");
+      if (head.getAttribute("aria-expanded") !== "true") head.click();
+      card.querySelector(".review-editor select").value = "accepted_risk";
+      card.querySelector(".review-note").value = ${JSON.stringify(note)};
+      card.querySelector(".review-editor button").click();
+      return true;
+    })()`);
+    check(await evaluate(`(() => {
+      const tag = document.querySelector("#findings-list .finding .finding-review");
+      return !tag.hidden && tag.textContent.includes("Accepted risk") && tag.textContent.includes(${JSON.stringify(note)})
+        && !tag.querySelector("b");
+    })()`), "a decision is saved and its note is shown as text");
+    check(await evaluate(`/^1 of \\d+ findings reviewed$/.test(document.getElementById("review-count").textContent)`),
+      "the review count updates");
+    // Export through the report endpoint, exactly as the download buttons send it.
+    const exported = await evaluate(`(async () => {
+      const form = baseForm({ format: "json", include_values: "false" });
+      form.set("reviews", JSON.stringify(currentReviews()));
+      const doc = await (await fetch("/api/report", { method: "POST", body: form })).json();
+      window.__exportedReport = doc;
+      return doc.reviews.length === 1 && doc.reviews[0].status === "accepted_risk" && doc.reviews[0].note === ${JSON.stringify(note)};
+    })()`);
+    check(exported, "the exported JSON report carries the decision");
+    // Forget everything in the tab, then import the exported report.
+    await evaluate(`sessionStorage.clear(); state.reviews = new Map(); renderFindings(); true`);
+    check(await evaluate(`document.querySelector("#findings-list .finding .finding-review").hidden`), "decisions can be cleared");
+    await evaluate(`importReviews(new File([JSON.stringify(window.__exportedReport)], "report.json", { type: "application/json" }))`);
+    check(await evaluate(`(() => {
+      const tag = document.querySelector("#findings-list .finding .finding-review");
+      return !tag.hidden && tag.textContent.includes("Accepted risk") && tag.textContent.includes(${JSON.stringify(note)});
+    })()`), "importing the exported report restores the decision");
+
     console.log("Integrity");
     const nulls = await evaluate(`(() => {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);

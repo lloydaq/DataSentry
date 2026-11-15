@@ -683,10 +683,28 @@ class ReportMetadata(Model):
     privacy_note: str
 
 
+class ReviewStatus(StrEnum):
+    acknowledged = "acknowledged"
+    accepted_risk = "accepted_risk"
+    fixed_upstream = "fixed_upstream"
+
+
+class FindingReview(Model):
+    """A person's decision about one finding, identified by its code and columns. Made in the
+    browser and only ever stored inside an exported report."""
+
+    finding_code: str = Field(min_length=1, max_length=100)
+    columns: list[str] = Field(default=[], max_length=500)
+    status: ReviewStatus
+    note: str = Field(default="", max_length=280)
+    decided_at: str = Field(min_length=1, max_length=40)
+
+
 class ReportDocument(Model):
     metadata: ReportMetadata
     analysis: AnalysisResult
     methodology: list[str]
+    reviews: list[FindingReview] = []
 
 
 class LimitsInfo(Model):

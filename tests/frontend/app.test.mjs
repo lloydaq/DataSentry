@@ -235,3 +235,35 @@ test("rangePlot returns nothing for degenerate ranges", () => {
 });
 
 assert.ok(document, "fake document is wired into the app context");
+
+// --- Review decisions (import validation) -------------------------------------------------------
+
+const goodReview = { finding_code: "constant_column", columns: ["country"], status: "accepted_risk", note: "known", decided_at: "2026-01-02T03:04:05Z" };
+
+test("validReviews keeps well-formed decisions and copies only known fields", () => {
+  const out = get("validReviews")([{ ...goodReview, extra: "<script>" }]);
+  assert.equal(out.length, 1);
+  assert.deepEqual(Object.keys(out[0]).sort(), ["columns", "decided_at", "finding_code", "note", "status"]);
+  assert.equal(out[0].note, "known");
+});
+
+test("validReviews drops malformed decisions from untrusted files", () => {
+  const validReviews = get("validReviews");
+  const bad = [
+    { ...goodReview, status: "approved" },
+    { ...goodReview, note: "n".repeat(281) },
+    { ...goodReview, columns: [1] },
+    { ...goodReview, finding_code: "" },
+    { ...goodReview, decided_at: 5 },
+    null, "text", 42,
+  ];
+  assert.equal(validReviews(bad).length, 0);
+  assert.equal(validReviews({ reviews: [goodReview] }).length, 0); // not a list
+  assert.equal(validReviews(undefined).length, 0);
+});
+
+test("review keys distinguish columns", () => {
+  const reviewKey = get("reviewKey");
+  assert.notEqual(reviewKey("constant_column", ["a"]), reviewKey("constant_column", ["b"]));
+  assert.equal(reviewKey("x", ["a", "b"]), reviewKey("x", ["a", "b"]));
+});

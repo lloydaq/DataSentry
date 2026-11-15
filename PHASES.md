@@ -127,7 +127,7 @@ the API result exactly.
 **Done when:** every auto-filled field traces back to a value in the analysis result, and
 human-only fields are always left blank.
 
-## Phase 8 — Finding review log ☐
+## Phase 8 — Finding review log ☑
 
 **Goal:** an auditable record of what a person decided about each finding.
 
