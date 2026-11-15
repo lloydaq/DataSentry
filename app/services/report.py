@@ -57,6 +57,9 @@ METHODOLOGY = [
     "are summarized as one observation.",
     f"Duplicates: {P.DUPLICATE_SEMANTICS} Medium severity from {F.DUPLICATE_MEDIUM_FRACTION:.0%} "
     "of rows.",
+    f"Near-duplicates: {P.NEAR_DUPLICATE_SEMANTICS} A potential issue, medium severity when at "
+    f"least {F.NEAR_DUPLICATE_MEDIUM_FRACTION:.0%} of rows are in such groups. Skipped above "
+    f"{P.NEAR_DUPLICATE_CELL_LIMIT:,} compared cells.",
     f"Near-constant: the most frequent value covers at least {F.NEAR_CONSTANT_FRACTION:.0%} of "
     f"non-missing values in a column with at least {F.NEAR_CONSTANT_MIN_ROWS} of them.",
     f"Identifier-like: every one of at least {P.IDENTIFIER_MIN_ROWS} rows has a distinct, "

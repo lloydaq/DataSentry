@@ -16,8 +16,10 @@ from app.models.schemas import (
     ColumnProfile,
     CorrelatedPair,
     DatetimeStats,
+    DifferingColumn,
     DuplicateSummary,
     InferredType,
+    NearDuplicateSummary,
     NumericStats,
     OutlierSummary,
     Overview,
@@ -43,6 +45,22 @@ CORRELATION_MIN_PAIRS = 10
 CORRELATION_MAX_COLUMNS = 50
 DUPLICATE_EXAMPLES_LIMIT = 10
 TIME_MIN_PARSED_FRACTION = 0.95  # a column used as time needs this share of values to parse
+
+NEAR_DUPLICATE_CELL_LIMIT = 2_000_000  # rows x compared columns; larger tables skip the check
+NEAR_DUPLICATE_SIGNIFICANT_DIGITS = 6  # numbers equal to this many significant digits match
+NEAR_DUPLICATE_EXAMPLES_LIMIT = 10  # example groups reported
+NEAR_DUPLICATE_GROUP_EXAMPLE_ROWS = 5  # row positions shown per example group
+NEAR_DUPLICATE_SEMANTICS = (
+    "Near-duplicates are rows that differ as stored in the compared columns but are identical "
+    "after normalization: text "
+    "is Unicode-normalized (NFKC), case-folded, stripped of punctuation and has whitespace "
+    f"collapsed; numbers are compared to {NEAR_DUPLICATE_SIGNIFICANT_DIGITS} significant digits; "
+    "missing values equal each other. Empty columns are ignored, and so are identifier-like "
+    "columns whose values stay all distinct after normalization (such as IDs), because copies of "
+    "one record often differ only in their ID. Rows are grouped by their normalized form, so "
+    "typos that change letters are not matched."
+)
+_PUNCTUATION = re.compile(r"[^\w\s]", re.UNICODE)
 
 DUPLICATE_SEMANTICS = (
     "A duplicate row is an exact repeat of an earlier row across all columns, compared after "
@@ -342,6 +360,76 @@ def duplicate_rows(frame: pd.DataFrame) -> DuplicateSummary:
         n_duplicate_groups=n_groups,
         example_row_indices=[int(i) for i in examples],
         semantics=DUPLICATE_SEMANTICS,
+    )
+
+
+def _normalized(series: pd.Series, kind: InferredType) -> pd.Series:
+    """Comparable text for each cell: missing cells become one shared marker."""
+    if kind is InferredType.numeric:
+        values = pd.to_numeric(series, errors="coerce")
+        out = values.map(lambda v: f"{v:.{NEAR_DUPLICATE_SIGNIFICANT_DIGITS}g}", na_action="ignore")
+    else:
+        text = series.astype("string")
+        out = (
+            text.str.normalize("NFKC").str.casefold()
+            .str.replace(_PUNCTUATION, "", regex=True)
+            .str.replace(r"\s+", " ", regex=True).str.strip()
+        )
+    return out.astype("object").where(series.notna(), "\x00")
+
+
+def near_duplicate_rows(frame: pd.DataFrame, profiles: list[ColumnProfile]) -> NearDuplicateSummary:
+    """Rows that differ as stored but match after normalization, grouped in one linear pass."""
+    candidates = [p for p in profiles if p.inferred_type is not InferredType.empty]
+    if len(frame) * len(candidates) > NEAR_DUPLICATE_CELL_LIMIT:
+        return NearDuplicateSummary(
+            status="skipped",
+            reason=f"The table has more than {NEAR_DUPLICATE_CELL_LIMIT:,} compared cells.",
+            columns_ignored=[p.name for p in profiles if p not in candidates],
+            semantics=NEAR_DUPLICATE_SEMANTICS,
+        )
+    normalized = {p.name: _normalized(frame[p.name], p.inferred_type) for p in candidates}
+    # An identifier-like column that stays all distinct after normalization can never match, so
+    # keeping it would block every group; a column with normalized collisions (such as names
+    # written two ways) is exactly where near-duplicates show, so it is compared.
+    compared = [p for p in candidates
+                if not (p.identifier_like and not normalized[p.name].duplicated().any())]
+    ignored = [p.name for p in profiles if p not in compared]
+    base = {"columns_compared": [p.name for p in compared], "columns_ignored": ignored,
+            "semantics": NEAR_DUPLICATE_SEMANTICS}
+    if not compared:
+        return NearDuplicateSummary(status="skipped", reason="No columns are left to compare.", **base)
+    norm = pd.DataFrame({p.name: normalized[p.name] for p in compared}, index=frame.index)
+    key = pd.util.hash_pandas_object(norm, index=False).to_numpy()
+    # Stored values on the same compared columns: a group counts only when formatting differs, so
+    # rows that differ just in an ignored identifier never form a near-duplicate group.
+    raw = pd.util.hash_pandas_object(frame[[p.name for p in compared]], index=False).to_numpy()
+    rows = pd.DataFrame({"key": key, "raw": raw, "pos": np.arange(len(frame))})
+    distinct = rows.groupby("key", sort=False)["raw"].nunique()
+    near_keys = distinct.index[distinct > 1]
+    members = rows[rows["key"].isin(near_keys)]
+    groups = [g["pos"].tolist() for _, g in members.groupby("key", sort=False)]
+    groups.sort(key=lambda g: g[0])  # deterministic: by first row position
+
+    differing: list[DifferingColumn] = []
+    if len(members):
+        sub = frame.iloc[members["pos"].to_numpy()][[p.name for p in compared]].astype("string")
+        sub = sub.fillna("\x00")
+        per_col = sub.groupby(members["key"].to_numpy(), sort=False).nunique()
+        counts = (per_col > 1).sum()
+        differing = sorted(
+            (DifferingColumn(column=str(c), n_groups=int(n)) for c, n in counts.items() if n),
+            key=lambda d: (-d.n_groups, d.column),
+        )
+    n_rows = len(members)
+    return NearDuplicateSummary(
+        status="computed",
+        n_groups=len(groups),
+        n_rows_involved=n_rows,
+        rows_involved_fraction=fraction(n_rows, len(frame)),
+        differing_columns=differing,
+        example_groups=[g[:NEAR_DUPLICATE_GROUP_EXAMPLE_ROWS] for g in groups[:NEAR_DUPLICATE_EXAMPLES_LIMIT]],
+        **base,
     )
 
 

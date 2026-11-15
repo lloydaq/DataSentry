@@ -854,6 +854,29 @@ function renderDuplicates(r) {
         : null,
       h("p", { class: "small muted", text: `${d.semantics} Row positions count data rows from 0, excluding the header.` }));
   }
+  const near = r.near_duplicates;
+  if (near) {
+    put(dupCard, h("div", { class: "section-label", text: "Near-duplicates" }));
+    if (near.status === "skipped") {
+      put(dupCard, h("p", { class: "small muted", text: `Not checked: ${near.reason}` }));
+    } else {
+      put(dupCard,
+        h("p", { class: "small", text: near.n_groups
+          ? `${fmtInt(near.n_groups)} group(s), ${fmtInt(near.n_rows_involved)} rows (${fmtPct(near.rows_involved_fraction)}) identical after normalization`
+          : "No rows match after normalization that differ as stored." }),
+        near.example_groups.length
+          ? h("p", { class: "small" }, "Example groups (row positions): ",
+            near.example_groups.map((g) => h("span", { class: "chip", text: g.join(", ") })))
+          : null,
+        near.differing_columns.length
+          ? h("p", { class: "small" }, "Differ in: ", near.differing_columns.map((d) => columnChip(d.column)))
+          : null,
+        near.columns_ignored.length
+          ? h("p", { class: "small muted" }, "Ignored (identifier-like or empty): ", near.columns_ignored.map(columnChip))
+          : null,
+        h("p", { class: "small muted", text: near.semantics }));
+    }
+  }
   const red = r.redundancy;
   const redCard = h("div", { class: "card" }, h("h2", { class: "card-title", text: "Redundant columns" }));
   if (!red) {
