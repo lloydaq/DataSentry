@@ -18,8 +18,10 @@ from app.api.uploads import UploadedFile, read_form
 from app.config import APP_VERSION, Limits
 from app.models.schemas import (
     AnalysisResult,
+    ContractCheckResult,
     CorrectionPlan,
     CorrectionResult,
+    DataContract,
     DatasetDiff,
     ErrorResponse,
     HealthResponse,
@@ -28,7 +30,7 @@ from app.models.schemas import (
     SplitAdvice,
     TrainTestOverlapResult,
 )
-from app.services import corrections, diff, label_review, leakage, report, splits
+from app.services import contract, corrections, diff, label_review, leakage, report, splits
 from app.services.analysis import run_analysis
 from app.services.loader import DatasetError, ParseOptions, load_csv, parse_options
 
@@ -210,6 +212,40 @@ async def dataset_diff(request: Request) -> DatasetDiff:
             load_csv(old.data, limits, old.filename, options),
             load_csv(new.data, limits, new.filename, options),
             target,
+        ),
+    )
+
+
+@router.post("/contract/export", response_model=DataContract, responses=_ERRORS)
+async def export_contract(request: Request) -> DataContract:
+    """Infer a data contract from a file. Fields: ``file``, optional ``target_column`` and the
+    parsing fields, which the contract records."""
+    upload, fields = await _single_upload(request)
+    target = _target(fields)
+    options = _options(fields)
+    limits = _limits(request)
+    return await _run(
+        request,
+        lambda: contract.export_contract(
+            load_csv(upload.data, limits, upload.filename, options), target
+        ),
+    )
+
+
+@router.post("/contract/check", response_model=ContractCheckResult, responses=_ERRORS)
+async def check_contract(request: Request) -> ContractCheckResult:
+    """Check a file against a contract. Fields: ``file`` and ``contract`` (a JSON file). The file
+    is read with the parsing options recorded in the contract."""
+    limits = _limits(request)
+    files, _ = await read_form(
+        request, file_fields=("file", "contract"), max_file_bytes=limits.max_upload_bytes
+    )
+    spec = contract.parse_contract(files["contract"].data, limits)
+    upload = files["file"]
+    return await _run(
+        request,
+        lambda: contract.check_contract(
+            load_csv(upload.data, limits, upload.filename, contract.contract_options(spec)), spec
         ),
     )
 

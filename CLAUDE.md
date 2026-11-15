@@ -42,6 +42,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/profiler.py` | Types, missing values, duplicates, numeric/categorical stats, redundancy |
 | `app/services/target.py` | Target task inference, class distribution, label conflicts |
 | `app/services/leakage.py` | Single-feature leakage screen; train/test overlap, including entity and time-order checks |
+| `app/services/contract.py` | Data contracts: export from a dataset; strict parsing of untrusted contracts; per-value checks |
 | `app/services/diff.py` | Dataset diff between two versions: schema, rows, shift (KS/PSI), missing values, finding changes |
 | `app/services/splits.py` | Split Doctor: opt-in split-strategy advice from target, entity and time columns |
 | `app/services/findings.py` | Rules turning observations into findings; qualitative summary (no score) |
@@ -61,7 +62,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3) and dataset diff (phase 4).
+corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4) and data contracts (phase 5).
 
 Not implemented (do not describe as existing): reproducible model-impact experiments, Cleanlab,
 imputation as a correction, near-duplicate detection, non-CSV formats, authentication. Build them

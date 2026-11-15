@@ -579,6 +579,59 @@ class DatasetDiff(Model):
     limitations: list[str]
 
 
+# --- Data contracts --------------------------------------------------------------------------
+
+
+class ContractColumn(Model):
+    """Expectations for one column. Only the rules that are set are checked."""
+
+    name: str
+    type: Literal["numeric", "boolean", "datetime", "categorical", "text"]
+    required: bool = True
+    nullable: bool = True
+    unique: bool = False
+    min: float | None = None
+    max: float | None = None
+    allowed_values: list[str] | None = None
+
+
+class ContractSource(Model):
+    filename: str
+    sha256: str
+    n_rows: int
+
+
+class DataContract(Model):
+    contract_version: Literal["1"]
+    generated_by: str | None = None
+    source: ContractSource | None = None
+    parsing: ParsingInfo
+    target_column: str | None = None
+    allow_extra_columns: bool = True
+    columns: list[ContractColumn]
+
+
+class ContractViolation(Model):
+    rule: Literal[
+        "missing_column", "unexpected_column", "type", "not_nullable", "unique", "min", "max",
+        "allowed_values",
+    ]
+    column: str
+    n_rows: int
+    example_rows: list[int] = Field(description="1-based data row numbers (header excluded).")
+    message: str
+
+
+class ContractCheckResult(Model):
+    dataset: DatasetInfo
+    passed: bool
+    n_columns_checked: int
+    n_rules_checked: int
+    violations: list[ContractViolation]
+    findings: list[Finding]
+    limitations: list[str]
+
+
 # --- Reports and errors ----------------------------------------------------------------------
 
 

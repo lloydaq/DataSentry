@@ -165,6 +165,7 @@
         <button type="button" role="tab" id="tab-target" aria-controls="panel-target" aria-selected="false" tabindex="-1">Target</button>
         <button type="button" role="tab" id="tab-ml" aria-controls="panel-ml" aria-selected="false" tabindex="-1">ML checks</button>
         <button type="button" role="tab" id="tab-compare" aria-controls="panel-compare" aria-selected="false" tabindex="-1">Compare versions</button>
+        <button type="button" role="tab" id="tab-contract" aria-controls="panel-contract" aria-selected="false" tabindex="-1">Contract</button>
         <button type="button" role="tab" id="tab-corrections" aria-controls="panel-corrections" aria-selected="false" tabindex="-1">Corrections <span class="tab-count" id="count-corrections"></span></button>
       </div>
 
@@ -274,6 +275,24 @@
           </div>
         </div>
         <div id="compare-results" aria-live="polite"></div>
+      </section>
+
+      <section id="panel-contract" class="tab-panel" role="tabpanel" aria-labelledby="tab-contract" hidden>
+        <div class="ml-grid">
+          <div class="card">
+            <h2 class="card-title">Export a contract</h2>
+            <p class="small">Turns this file into a JSON contract: each column's type, whether it may be empty, whether its values must be unique, the observed numeric range and the observed categories. Use it to check the next delivery of the same data.</p>
+            <p class="small muted">An inferred contract describes this file, not the truth. Review it and widen or remove rules before relying on it. It contains category values from your data.</p>
+            <button type="button" class="btn btn-primary" id="export-contract">Download contract (JSON)</button>
+          </div>
+          <div class="card">
+            <h2 class="card-title">Check against a contract</h2>
+            <p class="small">Checks the current file against a contract you exported and edited. The file is read with the parsing options stored in the contract.</p>
+            <label class="btn" for="contract-file-input">Choose contract (JSON)…</label>
+            <input type="file" id="contract-file-input" accept=".json,application/json" class="visually-hidden">
+          </div>
+        </div>
+        <div id="contract-results" aria-live="polite"></div>
       </section>
 
       <section id="panel-corrections" class="tab-panel" role="tabpanel" aria-labelledby="tab-corrections" hidden>

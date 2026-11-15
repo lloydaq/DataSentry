@@ -11,6 +11,7 @@ from html import escape
 
 from app.config import APP_VERSION
 from app.models.schemas import AnalysisResult, ColumnProfile, Finding, ReportDocument, ReportMetadata
+from app.services import contract as C
 from app.services import diff as Dd
 from app.services import findings as F
 from app.services import leakage as L
@@ -95,6 +96,12 @@ METHODOLOGY = [
     f"{Dd.MISSING_INCREASE_MAJOR:.0%}) are reported. A removed and an added column of the same type "
     f"whose distinct values overlap by at least {Dd.RENAME_MIN_OVERLAP} (Jaccard) are a possible "
     "rename. Findings are matched by code and columns as new, resolved or persisting.",
+    "Data contracts (opt-in): an exported contract records each column's inferred type, whether "
+    "it had missing values, uniqueness (identifier-like columns), the observed numeric minimum and "
+    f"maximum, and the observed categories (up to {C.EXPORT_MAX_ALLOWED_VALUES} values of at most "
+    f"{C.VALUE_MAX_LENGTH} characters). Checks are per value: numeric means a finite number, "
+    "boolean true/false, datetime ISO 8601. Every violation reports its row count and up to "
+    f"{C.VIOLATION_EXAMPLES_LIMIT} row numbers, never cell values.",
     "Summary: no numeric score. A category is 'issue' if it has a likely or potential problem of "
     "high or medium severity, 'review' for lower-severity problems or inconclusive checks, "
     "'pass' when only observations remain, and 'not_evaluated' when its checks did not run.",
