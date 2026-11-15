@@ -145,7 +145,9 @@ def _canonical(train: pd.Series, test: pd.Series) -> tuple[pd.Series, pd.Series]
     )
 
 
-def _row_hashes(train: pd.DataFrame, test: pd.DataFrame, columns: list[str]) -> tuple[np.ndarray, np.ndarray]:
+def row_hashes(train: pd.DataFrame, test: pd.DataFrame, columns: list[str]) -> tuple[np.ndarray, np.ndarray]:
+    """64-bit hashes of each row's values on ``columns``, aligned so that equal values parsed as
+    integers in one frame and floats in the other hash the same."""
     pairs = [_canonical(train[c], test[c]) for c in columns]
     a = pd.concat([p[0] for p in pairs], axis=1, keys=range(len(columns)))
     b = pd.concat([p[1] for p in pairs], axis=1, keys=range(len(columns)))
@@ -274,14 +276,14 @@ def train_test_overlap(
     entity = entity_overlap(tr, te, entity_column) if entity_column is not None else None
     temporal = temporal_order(tr, te, time_column) if time_column is not None else None
 
-    h_train, h_test = _row_hashes(tr, te, common)
+    h_train, h_test = row_hashes(tr, te, common)
     exact = np.isin(h_test, h_train)
     n_exact = int(exact.sum())
 
     n_feature_matches = n_label_conflicts = None
     features = [c for c in common if c != target]
     if target is not None and features:
-        f_train, f_test = _row_hashes(tr, te, features)
+        f_train, f_test = row_hashes(tr, te, features)
         feature_match = np.isin(f_test, f_train)
         n_feature_matches = int(feature_match.sum())
         # A feature match that is not also an exact match must carry a label unseen for those features.

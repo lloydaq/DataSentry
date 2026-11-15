@@ -20,6 +20,7 @@ from app.models.schemas import (
     AnalysisResult,
     CorrectionPlan,
     CorrectionResult,
+    DatasetDiff,
     ErrorResponse,
     HealthResponse,
     LabelReviewResult,
@@ -27,7 +28,7 @@ from app.models.schemas import (
     SplitAdvice,
     TrainTestOverlapResult,
 )
-from app.services import corrections, label_review, leakage, report, splits
+from app.services import corrections, diff, label_review, leakage, report, splits
 from app.services.analysis import run_analysis
 from app.services.loader import DatasetError, ParseOptions, load_csv, parse_options
 
@@ -188,6 +189,27 @@ async def train_test_overlap(request: Request) -> TrainTestOverlapResult:
             target,
             entity,
             time,
+        ),
+    )
+
+
+@router.post("/dataset-diff", response_model=DatasetDiff, responses=_ERRORS)
+async def dataset_diff(request: Request) -> DatasetDiff:
+    """Compare two versions of a dataset. Fields: ``old_file``, ``new_file`` and optional
+    ``target_column``. Both files are read with the same parsing options."""
+    limits = _limits(request)
+    files, fields = await read_form(
+        request, file_fields=("old_file", "new_file"), max_file_bytes=limits.max_upload_bytes
+    )
+    target = _target(fields)
+    options = _options(fields)
+    old, new = files["old_file"], files["new_file"]
+    return await _run(
+        request,
+        lambda: diff.dataset_diff(
+            load_csv(old.data, limits, old.filename, options),
+            load_csv(new.data, limits, new.filename, options),
+            target,
         ),
     )
 

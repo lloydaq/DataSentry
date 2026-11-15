@@ -73,6 +73,7 @@ number. Instead it reports each category separately and says which checks did no
 | **Leakage screen** | Single features that predict the target almost perfectly, reported as signals to verify, never as proof |
 | **ML checks (opt-in)** | Cross-validated label review that lists rows worth a second look; train/test overlap between two files, including shared entities and test rows older than training |
 | **Split Doctor (opt-in)** | Recommends a random, stratified, group or time-based split from the target and the entity and time columns you choose, with the evidence: how many rows share an entity, how many test rows a random split would give a known entity, and whether the target changes over time |
+| **Compare versions (opt-in)** | What changed between two exports of a dataset: columns added, removed, possibly renamed or retyped; rows kept, added and dropped; missing-value increases; distribution shift per column (Kolmogorov–Smirnov or population stability index); and which findings are new, resolved or still present |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
 | **Reports** | Strict JSON and a self-contained, script-free HTML report |
 | **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
@@ -275,6 +276,7 @@ are echoed in each result as `dataset.parsing`, so a result records how its file
 | POST | `/api/report` | `file`, optional `target_column`, `format` (`json`/`html`), `include_values` (`true`/`false`, default `false`) | Report as a download |
 | POST | `/api/label-review` | `file`, `target_column` | `LabelReviewResult` JSON |
 | POST | `/api/train-test-overlap` | `train_file`, `test_file`, optional `target_column`, `entity_column`, `time_column` | `TrainTestOverlapResult` JSON |
+| POST | `/api/dataset-diff` | `old_file`, `new_file`, optional `target_column` | `DatasetDiff` JSON |
 | POST | `/api/split-advice` | `file`, optional `target_column`, `entity_column`, `time_column` | `SplitAdvice` JSON |
 | POST | `/api/corrections/apply` | `file`, `plan` (JSON: `{"approved": true, "target_column": ..., "steps": [{"operation": ..., "columns": [...]}]}`) | Corrected CSV text and audit record |
 
@@ -394,6 +396,17 @@ match `?`). Excel, PDF, archives and binary files are rejected with a message.
   be intended (predicting for known entities, or a model never used on later data). Entity values
   are compared exactly, with integer-valued numbers aligned; dates must be ISO 8601 for at least
   95% of non-missing values in each file.
+- **Compare versions.** Both files are read with the same parsing options and analyzed with the
+  same target. Numeric columns are compared with the two-sample Kolmogorov–Smirnov statistic
+  (shifted from 0.1, medium severity from 0.25); categorical and boolean columns with the
+  population stability index over the union of categories, shares floored at 0.0001 (shifted from
+  0.1, medium from 0.25). Each version needs 20 non-missing values, and columns whose inferred type
+  changed are reported as type changes instead. An increase in a column's missing share of at
+  least 5 percentage points is reported (medium from 20). A removed and an added column of the same
+  type whose distinct values overlap by at least 0.8 (Jaccard) are listed as a possible rename (at
+  most 2,500 pairs are compared). Rows are matched exactly on shared columns. Findings are matched
+  by code and columns as new, resolved or persisting, and only when both analyses completed.
+  These statistics are effect sizes, not significance tests.
 - **Split Doctor.** A time column is usable when at least 95% of its non-missing values parse as
   ISO 8601 (compared in UTC), with at least 10 rows and two distinct dates; it then decides the
   recommendation (train on earlier rows, test on the latest 20%). Otherwise, grouping by entity is

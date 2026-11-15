@@ -503,6 +503,82 @@ class SplitAdvice(Model):
     limitations: list[str]
 
 
+# --- Dataset diff ----------------------------------------------------------------------------
+
+
+class RenameCandidate(Model):
+    old_name: str
+    new_name: str
+    value_overlap: float = Field(description="Jaccard similarity of the two columns' distinct values.")
+
+
+class TypeChange(Model):
+    column: str
+    old_type: InferredType
+    new_type: InferredType
+
+
+class SchemaChanges(Model):
+    added: list[str]
+    removed: list[str]
+    possible_renames: list[RenameCandidate]
+    type_changes: list[TypeChange]
+
+
+class RowChanges(Model):
+    n_old: int
+    n_new: int
+    n_columns_compared: int
+    n_new_rows_found_in_old: int
+    n_new_rows_not_in_old: int
+    n_old_rows_not_in_new: int
+
+
+class ColumnChange(Model):
+    column: str
+    old_type: InferredType
+    new_type: InferredType
+    old_missing_fraction: float
+    new_missing_fraction: float
+    shift_measure: Literal["ks", "psi"] | None
+    shift_statistic: float | None
+    shifted: bool
+    old_mean: float | None = None
+    new_mean: float | None = None
+    n_new_categories: int = 0
+    n_vanished_categories: int = 0
+    new_categories: list[str] = []
+    vanished_categories: list[str] = []
+    note: str | None = None
+
+
+class FindingRef(Model):
+    code: str
+    title: str
+    severity: Severity
+    columns: list[str]
+
+
+class FindingChanges(Model):
+    new: list[FindingRef]
+    resolved: list[FindingRef]
+    persisting: list[FindingRef]
+
+
+class DatasetDiff(Model):
+    old: DatasetInfo
+    new: DatasetInfo
+    identical: bool
+    target_column: str | None
+    headline: str
+    schema_changes: SchemaChanges
+    rows: RowChanges
+    columns: list[ColumnChange]
+    finding_changes: FindingChanges | None
+    findings: list[Finding]
+    limitations: list[str]
+
+
 # --- Reports and errors ----------------------------------------------------------------------
 
 
