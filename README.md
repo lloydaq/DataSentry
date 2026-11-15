@@ -207,6 +207,11 @@ python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
+Optional: `python -m pip install -r requirements-optional.txt` adds
+[Cleanlab](https://github.com/cleanlab/cleanlab) (Apache-2.0, a 0.3 MB pure-Python package whose
+heavy dependencies are already installed) for confident-learning label checks in label review.
+Everything else works without it, and label review says when it is not installed.
+
 On macOS or Linux, use `python3 -m venv .venv` and `source .venv/bin/activate`, then the same
 `pip` and `uvicorn` commands.
 
@@ -530,7 +535,11 @@ match `?`). Excel, PDF, archives and binary files are rejected with a message.
   lowest given-label probability first (up to 50). Out-of-fold accuracy, balanced accuracy and the
   majority-class baseline are reported so you can judge whether the model is informative. Classes
   with fewer than 5 examples are excluded. Model disagreement is not proof of a wrong label, and
-  labels are never changed.
+  labels are never changed. With the optional Cleanlab extra installed, its confident learning
+  (`find_label_issues(filter_by="prune_by_noise_rate")`, `n_jobs=1` for determinism) runs on the same
+  out-of-fold probabilities; the rows it flags are reported, lowest self-confidence first (up to
+  50), and marked among the listed candidates. Without the extra the result says it is unavailable;
+  a Cleanlab failure is reported as such and never stops label review.
 - **Summary.** No numeric score. Each category is `issue` (a likely or potential problem of high or
   medium severity), `review` (lower-severity problems or inconclusive checks), `pass` (only
   observations) or `not_evaluated` (its checks did not run). Nothing in DataSentry predicts model
@@ -584,13 +593,15 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
   is recomputed.
 - Model-impact experiments cover classification targets only, use one simple model, and measure
   this dataset; they are not general claims or significance tests.
-- Not implemented: Cleanlab-based label analysis, imputation
+- Not implemented: imputation
   as a correction (imputation belongs inside a training pipeline, fitted on training data only),
   authentication and multi-user deployment.
 
 ## Roadmap
 
-- Optional Cleanlab integration for label issues, once its dependency footprint is justified.
+Every phase in [PHASES.md](PHASES.md) is complete. Open ideas, none of them started: fuzzy
+(typo-tolerant) duplicate matching, regression targets for model-impact experiments, and formats
+other than CSV.
 
 ## Contributing
 

@@ -12,6 +12,7 @@ behavior changes; do not duplicate it here.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt   # only when requirements change
+.\.venv\Scripts\python.exe -m pip install -r requirements-optional.txt   # optional extras (Cleanlab)
 .\.venv\Scripts\python.exe -m pytest                               # full suite
 .\.venv\Scripts\python.exe -m compileall -q app tests scripts      # Python syntax
 node --check frontend/app.js                                       # JS syntax
@@ -24,7 +25,8 @@ node tests/e2e/smoke.mjs                                           # browser smo
 
 Environment: Python 3.14.4 venv in `.venv/` (pins need ≥3.12). Reuse it; do not upgrade or
 reinstall packages without a reason. Dependencies are pinned in `requirements.txt`; add one only
-with a concrete benefit and after checking it supports the project's Python version.
+with a concrete benefit and after checking it supports the project's Python version. Optional
+extras live in `requirements-optional.txt`, are imported lazily, and must never be required.
 
 ## Architecture
 
@@ -51,7 +53,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `app/services/findings.py` | Rules turning observations into findings; qualitative summary (no score) |
 | `app/services/analysis.py` | Stage orchestration; a failed stage makes the result `partial` |
 | `app/services/modeling.py` | The shared baseline model: feature selection, feature matrix and the leak-free scikit-learn pipeline |
-| `app/services/label_review.py` | Opt-in cross-validated label review (scikit-learn) |
+| `app/services/label_review.py` | Opt-in cross-validated label review (scikit-learn); optional Cleanlab confident learning, imported lazily and reported as unavailable when missing |
 | `app/services/experiments.py` | Opt-in model-impact experiments: leakage, duplicates, label noise; fixed seeds, same test sets, per-seed scores |
 | `app/services/corrections.py` | Correction proposals; approved application to a copy with audit trail |
 | `app/services/report.py` | JSON report document and escaped, script-free HTML report; validates review decisions sent with a report and keeps those matching a finding |
@@ -59,7 +61,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `tests/` | pytest: unit, API integration, security boundaries, determinism (`conftest.py` holds shared helpers); `frontend/` Node unit tests for `app.js` helpers (fake DOM, no deps); `e2e/smoke.mjs` headless-Chrome workflow test |
 | `docs/` | README artwork (`assets/*.svg`) and real app screenshots (`screenshots/*-light.png`, `*-dark.png`) |
 | `sample_data/` | Synthetic demo CSVs from `scripts/generate_sample_data.py`; planted issues listed in its README |
-| `.github/workflows/ci.yml` | CI: Python 3.12 on Ubuntu runs pytest, `compileall`, `node --check`, the frontend unit tests and the headless-Chrome smoke test (Node 22); read-only, no secrets |
+| `.github/workflows/ci.yml` | CI: Python 3.12 on Ubuntu runs pytest, `compileall`, `node --check`, the frontend unit tests and the headless-Chrome smoke test (Node 22) without optional extras, then installs them and reruns the Cleanlab tests; read-only, no secrets |
 | `reports/` | Reserved for report artifacts. Preserve it and its contents; nothing writes here automatically |
 
 ## Implementation status
@@ -67,9 +69,9 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 Implemented and tested: everything in milestones 1–5 (loader, schemas, core and extended
 diagnostics, target analysis, findings and summary, API, frontend, JSON/HTML reports, hardening)
 plus, from milestone 6, the leakage screen, train/test overlap, label review and approved
-corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6), the datasheet draft (phase 7), the finding review log (phase 8), near-duplicate detection (phase 9) and model-impact experiments (phase 10).
+corrections; and, from `PHASES.md`, configurable parsing (phase 2), Split Doctor (phase 3), dataset diff (phase 4), data contracts (phase 5), the quality gate CLI (phase 6), the datasheet draft (phase 7), the finding review log (phase 8), near-duplicate detection (phase 9), model-impact experiments (phase 10) and optional Cleanlab (phase 11).
 
-Not implemented (do not describe as existing): Cleanlab,
+Not implemented (do not describe as existing):
 imputation as a correction, fuzzy (typo-tolerant) duplicate matching, non-CSV formats, authentication. Build them
 only when asked, one independently testable milestone at a time.
 
