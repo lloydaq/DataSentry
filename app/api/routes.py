@@ -22,6 +22,7 @@ from app.models.schemas import (
     CorrectionPlan,
     CorrectionResult,
     DataContract,
+    Datasheet,
     DatasetDiff,
     ErrorResponse,
     HealthResponse,
@@ -30,7 +31,16 @@ from app.models.schemas import (
     SplitAdvice,
     TrainTestOverlapResult,
 )
-from app.services import contract, corrections, diff, label_review, leakage, report, splits
+from app.services import (
+    contract,
+    corrections,
+    datasheet,
+    diff,
+    label_review,
+    leakage,
+    report,
+    splits,
+)
 from app.services.analysis import run_analysis
 from app.services.loader import DatasetError, ParseOptions, load_csv, parse_options
 
@@ -151,6 +161,39 @@ async def download_report(request: Request) -> Response:
         headers={
             "Content-Disposition": f'attachment; filename="datasentry-report-{stem}.{fmt}"'
         },
+    )
+
+
+@router.post(
+    "/datasheet",
+    responses={200: {"content": {"text/markdown": {}, "application/json": {}}}, **_ERRORS},
+)
+async def download_datasheet(request: Request) -> Response:
+    """A datasheet draft as a download. Fields: ``file``, ``target_column``, ``format``
+    (``markdown``, the default, or ``json``) and the parsing fields. Questions only a person can
+    answer are always left empty."""
+    upload, fields = await _single_upload(request)
+    fmt = fields.get("format", "markdown").strip().lower() or "markdown"
+    if fmt not in ("markdown", "json"):
+        raise DatasetError("invalid_request", "Field 'format' must be 'markdown' or 'json'.")
+    target = _target(fields)
+    options = _options(fields)
+    limits = _limits(request)
+
+    def build() -> tuple[Datasheet, str]:
+        dataset = load_csv(upload.data, limits, upload.filename, options)
+        return datasheet.build_datasheet(run_analysis(dataset, target)), dataset.filename
+
+    sheet, filename = await _run(request, build)
+    stem = filename.rsplit(".", 1)[0]
+    if fmt == "markdown":
+        ext, media, body = "md", "text/markdown; charset=utf-8", datasheet.render_markdown(sheet)
+    else:
+        ext, media, body = "json", "application/json", sheet.model_dump_json(indent=2)
+    return Response(
+        content=body,
+        media_type=media,
+        headers={"Content-Disposition": f'attachment; filename="datasentry-datasheet-{stem}.{ext}"'},
     )
 
 
