@@ -16,7 +16,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done
 
 ---
 
-## Phase 0 — Housekeeping and CI ◐
+## Phase 0 — Housekeeping and CI ☑
 
 **Goal:** a clean repository and automated proof that it works.
 
@@ -29,7 +29,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done
 
 **Done when:** `git status` is clean apart from intentional files, and CI passes on GitHub.
 
-## Phase 1 — Frontend and browser tests ☐
+## Phase 1 — Frontend and browser tests ☑
 
 **Goal:** the UI is protected by tests the same way the backend is.
 
@@ -41,7 +41,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done
 
 **Done when:** a regression like the `"null"` text bug would fail CI.
 
-## Phase 2 — Configurable input ☐
+## Phase 2 — Configurable input ☑
 
 **Goal:** real-world CSVs load without pre-cleaning.
 
@@ -53,7 +53,7 @@ Status key: ☐ not started · ◐ in progress · ☑ done
 **Done when:** semicolon and Latin-1 fixtures load correctly, and invalid options get fixed-template
 errors.
 
-## Phase 3 — Split Doctor (group-aware and temporal splits) ☐ *(distinctive)*
+## Phase 3 — Split Doctor (group-aware and temporal splits) ☑ *(distinctive)*
 
 **Goal:** catch the split mistakes that inflate validation scores. These are among the most common
 real ML failures, and generic profilers rarely check them.
@@ -70,7 +70,7 @@ real ML failures, and generic profilers rarely check them.
 **Done when:** synthetic fixtures with planted entity and temporal leakage are flagged, and clean
 fixtures are not.
 
-## Phase 4 — Dataset Diff (version-to-version changes) ☐ *(distinctive)*
+## Phase 4 — Dataset Diff (version-to-version changes) ☑ *(distinctive)*
 
 **Goal:** answer "what changed between v1 and v2 of this dataset?" before retraining.
 
@@ -85,7 +85,7 @@ fixtures are not.
 **Done when:** planted drift fixtures produce the expected changes, identical files produce "no
 changes", and output is deterministic.
 
-## Phase 5 — Data Contract export and check ☐ *(distinctive)*
+## Phase 5 — Data Contract export and check ☑ *(distinctive)*
 
 **Goal:** turn one good dataset into guardrails for the next one.
 
@@ -100,7 +100,7 @@ changes", and output is deterministic.
 **Done when:** a contract round-trips (export → check the same file → no violations), and each
 violation type has a test.
 
-## Phase 6 — Quality gate CLI ☐ *(distinctive)*
+## Phase 6 — Quality gate CLI ☑ *(distinctive)*
 
 **Goal:** use DataSentry inside a data pipeline, not only in a browser.
 
