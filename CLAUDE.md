@@ -53,6 +53,7 @@ Keep these boundaries. `app/services/` and `app/models/` must never import FastA
 | `tests/` | pytest: unit, API integration, security boundaries, determinism (`conftest.py` holds shared helpers); `frontend/` Node unit tests for `app.js` helpers (fake DOM, no deps); `e2e/smoke.mjs` headless-Chrome workflow test |
 | `docs/` | README artwork (`assets/*.svg`) and real app screenshots (`screenshots/*-light.png`, `*-dark.png`) |
 | `sample_data/` | Synthetic demo CSVs from `scripts/generate_sample_data.py`; planted issues listed in its README |
+| `.github/workflows/ci.yml` | CI: Python 3.12 on Ubuntu runs pytest, `compileall`, `node --check`, the frontend unit tests and the headless-Chrome smoke test (Node 22); read-only, no secrets |
 | `reports/` | Reserved for report artifacts. Preserve it and its contents; nothing writes here automatically |
 
 ## Implementation status
@@ -111,6 +112,6 @@ only when asked, one independently testable milestone at a time.
 - Graphify (`graphify update app --no-cluster`, then `graphify god-nodes` / `graphify affected "X"`)
   is a navigation aid, not proof of correctness. Its output (`graphify-out/`) stays local and
   git-ignored.
-- The repository has no commits yet. Do not commit, push, reset, clean or rewrite history unless
+- The repository has commits on `main`. Do not commit, push, reset, clean or rewrite history unless
   explicitly asked. Never discard user changes. Preserve `reports/` and `sample_data/`. Keep
   `.env` and other secrets out of version control. Do not touch other repositories.

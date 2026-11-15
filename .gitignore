@@ -9,3 +9,22 @@ __pycache__/
 
 # Local tool output
 graphify-out/
+
+# AI agent tool installs (reinstallable; not part of the project)
+.agent/
+.agents/
+.claude/skills/
+.claude/settings.local.json
+.codex/
+.gemini/
+.opencode/
+skills-lock.json
+.claude/agents/
+
+# Impeccable session state (design.json stays tracked)
+.impeccable/live/
+.impeccable/*.local.json
+.impeccable/hook.cache.json
+
+# Local scratch data
+/sample.csv
