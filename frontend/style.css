@@ -72,6 +72,10 @@
     "Segoe UI Variable Display", "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
 
+  /* Page width: content uses wide screens up to --page-max; gutters grow with the viewport. */
+  --page-max: 1680px;
+  --gutter: clamp(20px, 3.5vw, 56px);
+
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --t-fast: 160ms;
@@ -119,7 +123,7 @@ a { color: var(--accent-ink); text-underline-offset: 3px; }
 .topbar {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; gap: 14px; min-height: 56px;
-  padding: 8px max(20px, calc((100vw - 1180px) / 2));
+  padding: 8px max(var(--gutter), calc((100vw - var(--page-max)) / 2 + var(--gutter)));
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
@@ -174,7 +178,7 @@ a { color: var(--accent-ink); text-underline-offset: 3px; }
 .theme-switch:has([value="light"]:checked) .theme-thumb { transform: translateX(100%); }
 .theme-switch:has([value="dark"]:checked) .theme-thumb { transform: translateX(200%); }
 
-main { max-width: 1180px; margin: 0 auto; padding: 32px 20px 88px; }
+main { max-width: var(--page-max); margin: 0 auto; padding: 32px var(--gutter) 88px; }
 
 /* Buttons and inputs ------------------------------------------------------------------------ */
 .btn {
@@ -212,14 +216,14 @@ input[type="search"].input { flex: 1 1 220px; }
 /* Upload view ------------------------------------------------------------------------------- */
 /* The one branded surface: a static gradient panel holding the pitch and the upload card. */
 .upload-view {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: center;
-  min-height: min(720px, calc(100vh - 140px)); padding: 64px 56px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 580px); gap: clamp(40px, 6vw, 120px); align-items: center;
+  min-height: min(760px, calc(100vh - 140px)); padding: clamp(48px, 5vw, 96px) clamp(36px, 5vw, 96px);
   border-radius: var(--r-feature); background: var(--brand-gradient); color: #ffffff;
   /* On the Onyx ground the gradient's black start needs an edge to keep the panel's shape. */
   border: 1px solid light-dark(transparent, #2b2b2b);
 }
 .hero h1 {
-  font-size: clamp(36px, 5vw, 60px); font-weight: 600; line-height: 1.05; letter-spacing: -0.03em;
+  font-size: clamp(36px, 4.4vw, 76px); font-weight: 600; line-height: 1.04; letter-spacing: -0.03em;
   margin-bottom: 20px; max-width: 14ch;
 }
 .lede { color: rgba(255, 255, 255, 0.82); font-size: 18px; line-height: 1.5; max-width: 46ch; margin-bottom: 32px; }
