@@ -7,6 +7,7 @@ neutral facts worth knowing, and ``inconclusive`` when a check could not reach a
 """
 
 from app.models.schemas import (
+    NearDuplicateSummary,
     Category,
     CategoryStatus,
     ColumnProfile,
@@ -26,6 +27,7 @@ from app.models.schemas import (
 MISSING_REPORT_FRACTION = 0.05  # below this, missing values are summarized as one observation
 MISSING_HIGH_FRACTION = 0.5
 DUPLICATE_MEDIUM_FRACTION = 0.05
+NEAR_DUPLICATE_MEDIUM_FRACTION = 0.05  # share of rows in near-duplicate groups for medium severity
 NEAR_CONSTANT_FRACTION = 0.95
 NEAR_CONSTANT_MIN_ROWS = 20
 HIGH_CARDINALITY_MIN_UNIQUE = 50
@@ -369,7 +371,8 @@ def duplicate_findings(dup: DuplicateSummary, n_rows: int) -> list[Finding]:
             "sides of a train/test split, inflate evaluation metrics.",
             recommendation="Confirm the duplicates are not legitimate repeated events, then "
             "deduplicate before splitting.",
-            limitations="Only exact duplicates are detected; near-duplicates are not.",
+            limitations="Exact repeats only; rows that differ only in formatting are reported "
+            "separately as near-duplicates.",
             columns=[],
             evidence={
                 "n_duplicate_rows": dup.n_duplicate_rows,
@@ -377,6 +380,46 @@ def duplicate_findings(dup: DuplicateSummary, n_rows: int) -> list[Finding]:
                 "n_duplicate_groups": dup.n_duplicate_groups,
             },
             correction="drop_duplicate_rows",
+        )
+    ]
+
+
+def near_duplicate_findings(near: NearDuplicateSummary, n_rows: int) -> list[Finding]:
+    if near.status != "computed" or not near.n_groups:
+        return []
+    first = ", ".join(str(i) for i in near.example_groups[0])
+    columns = [d.column for d in near.differing_columns]
+    where = (f" They differ in {', '.join(repr(c) for c in columns[:3])}"
+             + (f" and {len(columns) - 3} more column(s)" if len(columns) > 3 else "") + "."
+             if columns else "")
+    return [
+        Finding(
+            code="near_duplicate_rows",
+            kind=FindingKind.potential_issue,
+            severity=Severity.medium
+            if near.rows_involved_fraction >= NEAR_DUPLICATE_MEDIUM_FRACTION
+            else Severity.low,
+            category=Category.uniqueness,
+            title=f"{near.n_groups} group(s) of near-duplicate rows",
+            explanation=f"{near.n_rows_involved} of {n_rows} rows ({_pct(near.rows_involved_fraction)}) "
+            f"fall into {near.n_groups} group(s) that are identical after normalizing case, "
+            f"spacing, punctuation and numeric precision, but not as stored.{where}",
+            why_it_matters="Copies of one record that differ only in formatting escape exact "
+            "deduplication, over-weight those records and can leak between train and test sets.",
+            recommendation="Inspect the example rows; if they describe the same entity or event, "
+            "standardize the formatting and deduplicate before splitting.",
+            limitations="Normalization can merge values whose case or punctuation carries meaning, "
+            "and typos that change letters are not matched. ID-like columns that stay unique "
+            "after normalization are ignored, so rows differing only there can be grouped.",
+            columns=columns,
+            evidence={
+                "n_groups": near.n_groups,
+                "n_rows_involved": near.n_rows_involved,
+                "rows_involved_fraction": near.rows_involved_fraction,
+                "first_group_row_positions": first,
+                "n_columns_compared": len(near.columns_compared),
+                "n_columns_ignored": len(near.columns_ignored),
+            },
         )
     ]
 

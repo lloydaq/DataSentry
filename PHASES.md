@@ -138,7 +138,7 @@ human-only fields are always left blank.
 
 **Done when:** decisions survive the export → import round trip, and the HTML report escapes notes.
 
-## Phase 9 — Near-duplicate detection ☐
+## Phase 9 — Near-duplicate detection ☑
 
 **Goal:** find rows that are duplicates in practice but not byte-identical.
 

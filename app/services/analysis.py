@@ -20,7 +20,9 @@ T = TypeVar("T")
 LIMITATIONS = [
     "Checks are heuristic screens with documented thresholds; findings are prompts for review, "
     "not verdicts about the data.",
-    "Only exact duplicates are detected. Near-duplicates and related records are not.",
+    "Duplicates are exact repeats; near-duplicates match only after normalizing case, spacing, "
+    "punctuation and numeric precision, so typos are not matched. Related records (the same "
+    "customer at two dates) are not detected without an entity column.",
     "Datetime columns are recognized only in ISO 8601 form (YYYY-MM-DD with optional time).",
     "Values such as NA, N/A, null, NaN and empty cells are read as missing (pandas defaults).",
     "No single numeric quality score is produced; see the summary's score policy.",
@@ -50,6 +52,13 @@ def run_analysis(dataset: LoadedDataset, target_column: str | None = None) -> An
     profiles = _run("columns", lambda: profiler.profile_columns(frame), stages)
     overview = profiler.overview(frame, profiles)
     duplicates = _run("duplicates", lambda: profiler.duplicate_rows(frame), stages)
+    if profiles is not None:
+        near = _run("near_duplicates", lambda: profiler.near_duplicate_rows(frame, profiles), stages)
+    else:
+        near = None
+        stages.append(
+            StageStatus(name="near_duplicates", status="skipped", detail="Column profiling failed.")
+        )
     redundancy = (
         _run("redundancy", lambda: profiler.redundancy(frame, profiles), stages)
         if profiles is not None
@@ -71,6 +80,8 @@ def run_analysis(dataset: LoadedDataset, target_column: str | None = None) -> An
         found += findings.column_findings(profiles, n_rows, target_column)
     if duplicates is not None:
         found += findings.duplicate_findings(duplicates, n_rows)
+    if near is not None:
+        found += findings.near_duplicate_findings(near, n_rows)
     if redundancy is not None:
         found += findings.redundancy_findings(redundancy)
     if target_result is not None:
@@ -92,6 +103,7 @@ def run_analysis(dataset: LoadedDataset, target_column: str | None = None) -> An
         overview=overview,
         columns=profiles,
         duplicates=duplicates,
+        near_duplicates=near,
         redundancy=redundancy,
         target=target_result,
         findings=found,
