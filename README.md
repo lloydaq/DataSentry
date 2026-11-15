@@ -18,6 +18,7 @@ informed corrections before model training.
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-label%20review-0f1b3d?logo=scikitlearn&logoColor=white)
 ![Tested with pytest](https://img.shields.io/badge/tested%20with-pytest-0f1b3d?logo=pytest&logoColor=white)
 ![Runs locally](https://img.shields.io/badge/runs-locally%2C%20no%20cloud-2f5bd3)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2f5bd3)](LICENSE)
 
 [Quick start](#quick-start) · [Capabilities](#key-capabilities) · [How it works](#how-it-works) · [API](#api-reference) · [Methodology](#diagnostic-methodology) · [Security](#security-and-privacy)
 
@@ -48,6 +49,7 @@ informed corrections before model training.
 - [Limitations](#limitations)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Why DataSentry
 
@@ -512,3 +514,7 @@ Issues and pull requests are welcome. Before opening a pull request:
 
 Project conventions for contributors and coding agents are in [`CLAUDE.md`](CLAUDE.md); the visual
 system is documented in [`DESIGN.md`](DESIGN.md).
+
+## License
+
+DataSentry is released under the [MIT License](LICENSE).
