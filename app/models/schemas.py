@@ -416,6 +416,22 @@ class LabelReviewResult(Model):
     limitations: list[str] = []
 
 
+class EntityOverlap(Model):
+    column: str
+    n_test_entities: int
+    n_shared_entities: int
+    n_test_rows_with_seen_entity: int
+    test_rows_with_seen_entity_fraction: float
+
+
+class TemporalOrder(Model):
+    column: str
+    train_max: str
+    test_min: str
+    n_test_rows_before_train_max: int
+    test_rows_before_train_max_fraction: float
+
+
 class TrainTestOverlapResult(Model):
     train: DatasetInfo
     test: DatasetInfo
@@ -428,7 +444,62 @@ class TrainTestOverlapResult(Model):
     n_test_feature_matches: int | None
     n_feature_matches_with_different_label: int | None
     example_test_row_indices: list[int]
+    entity_overlap: EntityOverlap | None = None
+    temporal_order: TemporalOrder | None = None
     findings: list[Finding]
+    limitations: list[str]
+
+
+# --- Split Doctor ----------------------------------------------------------------------------
+
+
+class SplitStrategy(StrEnum):
+    random = "random"
+    stratified = "stratified"
+    group = "group"
+    stratified_group = "stratified_group"
+    time = "time"
+
+
+class EntityProfile(Model):
+    column: str
+    n_entities: int
+    n_rows_missing_entity: int
+    max_rows_per_entity: int
+    n_entities_with_repeats: int
+    rows_in_repeated_entities_fraction: float
+    expected_test_rows_with_seen_entity_fraction: float = Field(
+        description="Expected share of test rows whose entity also has a training row under an "
+        "independent random holdout; an approximation, not a probability for any one split."
+    )
+
+
+class TimeProfile(Model):
+    column: str
+    usable: bool
+    n_parsed: int
+    n_missing: int
+    n_unparseable: int
+    n_distinct: int
+    min: str | None
+    max: str | None
+    rows_in_time_order: bool | None
+    holdout_cutoff: str | None
+    target_shift: float | None
+    target_shift_measure: Literal["total_variation_distance", "standardized_mean_difference"] | None
+
+
+class SplitAdvice(Model):
+    dataset: DatasetInfo
+    target_column: str | None
+    entity_column: str | None
+    time_column: str | None
+    task: TargetTask | None
+    recommended: SplitStrategy
+    headline: str
+    reasons: list[str]
+    entity: EntityProfile | None
+    time: TimeProfile | None
     limitations: list[str]
 
 

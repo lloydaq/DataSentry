@@ -234,10 +234,29 @@
           <div class="card">
             <h2 class="card-title">Train/test overlap</h2>
             <p class="small">Treats the current file as the training set and checks a holdout or test file for rows that also appear in training, and for matching features with different labels.</p>
+            <p class="small muted">If you choose entity or time columns in Split Doctor, the test file is also checked for shared entities and for rows older than the newest training row.</p>
             <label class="btn" for="test-file-input">Choose test CSV…</label>
             <input type="file" id="test-file-input" accept=".csv,text/csv" class="visually-hidden">
             <button type="button" class="btn btn-small" id="sample-holdout">Use sample holdout</button>
             <div id="overlap-results"></div>
+          </div>
+          <div class="card">
+            <h2 class="card-title" id="split-title">Split Doctor</h2>
+            <p class="small">Recommends how to divide this file into training and test sets, using the target and the entity and time columns you choose. Random splits overstate performance when the same entity lands on both sides, or when the model trains on rows newer than it is tested on.</p>
+            <form id="split-form" class="split-form" aria-labelledby="split-title">
+              <div class="field">
+                <label class="field-label" for="split-entity">Entity column <span class="muted">(optional)</span></label>
+                <select id="split-entity" name="entity_column" class="input" aria-describedby="split-entity-hint"></select>
+                <span id="split-entity-hint" class="hint">Who or what a row describes, such as a customer, patient or device ID.</span>
+              </div>
+              <div class="field">
+                <label class="field-label" for="split-time">Time column <span class="muted">(optional)</span></label>
+                <select id="split-time" name="time_column" class="input" aria-describedby="split-time-hint"></select>
+                <span id="split-time-hint" class="hint">ISO 8601 dates, such as 2024-03-01 or 2024-03-01T14:30:00Z.</span>
+              </div>
+              <button type="submit" class="btn btn-primary" id="run-split">Get split advice</button>
+            </form>
+            <div id="split-results" aria-live="polite"></div>
           </div>
         </div>
       </section>

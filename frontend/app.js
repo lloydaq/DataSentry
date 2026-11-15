@@ -298,6 +298,7 @@ function resetToUpload() {
   $("upload-error").hidden = true;
   clear($("label-review-results"));
   clear($("overlap-results"));
+  clear($("split-results"));
   window.scrollTo(0, 0);
   $("dropzone").focus();
 }
@@ -323,7 +324,7 @@ async function rerun(target) {
 function setDashboardBusy(busy) {
   state.busy = busy;
   $("dashboard-busy").hidden = !busy;
-  for (const id of ["run-target", "download-json", "download-html", "new-analysis"]) {
+  for (const id of ["run-target", "download-json", "download-html", "new-analysis", "run-split"]) {
     $(id).disabled = busy;
   }
   $("run-label-review").disabled = busy || !canReviewLabels();
@@ -342,6 +343,7 @@ function showDashboard(result, { keepTab = false } = {}) {
   $("new-analysis").hidden = false;
   clear($("label-review-results"));
   clear($("overlap-results"));
+  clear($("split-results"));
   renderFileBar(result);
   renderSummary(result);
   renderOverview(result);
@@ -810,6 +812,66 @@ function renderMl() {
     ? `Uses up to ${fmtInt(state.limits?.max_label_review_rows || 0)} rows. Runs only when you click.`
     : "Select a classification target on the Target tab first.";
   $("sample-holdout").hidden = state.sample !== "customer_churn.csv";
+  const target = state.result.settings.target_column;
+  fillColumnSelect($("split-entity"), target);
+  fillColumnSelect($("split-time"), target);
+}
+
+// Column choices for Split Doctor; a previous choice survives a re-run if the column still exists.
+function fillColumnSelect(select, exclude) {
+  const current = select.value;
+  const columns = (state.result.columns || []).filter((c) => c.name !== exclude);
+  put(clear(select),
+    h("option", { value: "", text: "None" }),
+    columns.map((c) => h("option", { value: c.name, text: c.inferred_type === "datetime" ? `${c.name} (dates)` : c.name })));
+  select.value = columns.some((c) => c.name === current) ? current : "";
+}
+
+function splitColumns() {
+  const fields = {};
+  if ($("split-entity").value) fields.entity_column = $("split-entity").value;
+  if ($("split-time").value) fields.time_column = $("split-time").value;
+  return fields;
+}
+
+const STRATEGY_TEXT = {
+  random: "Random split",
+  stratified: "Stratified split",
+  group: "Group split",
+  stratified_group: "Stratified group split",
+  time: "Time-based split",
+};
+const day = (iso) => (iso ? iso.slice(0, 10) : "—");
+
+async function runSplitAdvice(event) {
+  event.preventDefault();
+  if (state.busy) return;
+  const out = clear($("split-results"));
+  put(out, h("p", { class: "small muted", text: "Checking the split…" }));
+  setDashboardBusy(true);
+  try {
+    const res = await (await post("/api/split-advice", baseForm(splitColumns()))).json();
+    put(clear(out),
+      h("p", { class: "split-verdict" },
+        h("span", { class: "pill pill-outline", text: STRATEGY_TEXT[res.recommended] || res.recommended }),
+        h("span", { text: res.headline })),
+      h("ul", { class: "split-reasons small" }, res.reasons.map((r) => h("li", { text: r }))),
+      res.entity ? h("div", { class: "kv-grid" },
+        kv("Entities", fmtInt(res.entity.n_entities)),
+        kv("Rows in repeated entities", fmtPct(res.entity.rows_in_repeated_entities_fraction)),
+        kv("Test rows with a known entity, random split (est.)", fmtPct(res.entity.expected_test_rows_with_seen_entity_fraction))) : null,
+      res.time ? h("div", { class: "kv-grid" },
+        kv("Dates", res.time.usable ? `${day(res.time.min)} to ${day(res.time.max)}` : "not usable"),
+        kv("Latest 20% starts", day(res.time.holdout_cutoff)),
+        kv("Rows in date order", res.time.rows_in_time_order === null ? "—" : res.time.rows_in_time_order ? "yes" : "no")) : null,
+      h("details", { class: "split-limits small muted" },
+        h("summary", { text: "Limitations" }),
+        h("ul", {}, res.limitations.map((l) => h("li", { text: l })))));
+  } catch (err) {
+    put(clear(out), h("div", { class: "alert alert-error", text: err.message }));
+  } finally {
+    setDashboardBusy(false);
+  }
 }
 
 async function runLabelReview() {
@@ -873,6 +935,7 @@ async function runOverlap(testFile) {
   const target = state.result.settings.target_column;
   if (target) form.append("target_column", target);
   appendParsing(form, state.result.dataset.parsing);
+  for (const [k, v] of Object.entries(splitColumns())) form.append(k, v);
   setDashboardBusy(true);
   try {
     const res = await (await post("/api/train-test-overlap", form)).json();
@@ -881,7 +944,9 @@ async function runOverlap(testFile) {
       h("div", { class: "kv-grid" },
         kv("Test rows found in train", `${fmtInt(res.n_test_rows_in_train)} (${fmtPct(res.test_rows_in_train_fraction)})`),
         kv("Feature matches", res.n_test_feature_matches === null ? "needs target" : fmtInt(res.n_test_feature_matches)),
-        kv("…with a different label", res.n_feature_matches_with_different_label === null ? "needs target" : fmtInt(res.n_feature_matches_with_different_label))),
+        kv("…with a different label", res.n_feature_matches_with_different_label === null ? "needs target" : fmtInt(res.n_feature_matches_with_different_label)),
+        res.entity_overlap ? kv("Test rows with a known entity", `${fmtInt(res.entity_overlap.n_test_rows_with_seen_entity)} (${fmtPct(res.entity_overlap.test_rows_with_seen_entity_fraction)})`) : null,
+        res.temporal_order ? kv("Test rows older than newest training row", `${fmtInt(res.temporal_order.n_test_rows_before_train_max)} (${fmtPct(res.temporal_order.test_rows_before_train_max_fraction)})`) : null),
       res.findings.length
         ? h("div", { class: "findings-list" }, res.findings.map((f, i) => findingCard(f, `overlap-${i}`)))
         : h("p", { class: "small", text: "No exact overlap found." }),
@@ -1151,6 +1216,7 @@ function init() {
   $("filter-type").addEventListener("change", renderColumns);
   $("run-target").addEventListener("click", () => rerun($("target-select").value || null));
   $("run-label-review").addEventListener("click", runLabelReview);
+  $("split-form").addEventListener("submit", runSplitAdvice);
   $("test-file-input").addEventListener("change", (e) => { if (e.target.files[0]) runOverlap(e.target.files[0]); });
   $("sample-holdout").addEventListener("click", async () => {
     try {

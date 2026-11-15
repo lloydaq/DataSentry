@@ -71,7 +71,8 @@ number. Instead it reports each category separately and says which checks did no
 | **Consistency** | Numbers stored as text, category variants that differ only in case or spacing, stray whitespace, infinite values |
 | **Target analysis** | Classification vs. regression inference, class balance, rare and single classes, missing labels, identical rows with conflicting labels |
 | **Leakage screen** | Single features that predict the target almost perfectly, reported as signals to verify, never as proof |
-| **ML checks (opt-in)** | Cross-validated label review that lists rows worth a second look; train/test overlap between two files |
+| **ML checks (opt-in)** | Cross-validated label review that lists rows worth a second look; train/test overlap between two files, including shared entities and test rows older than training |
+| **Split Doctor (opt-in)** | Recommends a random, stratified, group or time-based split from the target and the entity and time columns you choose, with the evidence: how many rows share an entity, how many test rows a random split would give a known entity, and whether the target changes over time |
 | **Approved corrections** | Remove unlabeled rows, exact duplicates or empty/constant/copied columns, only after explicit approval, applied to a copy, with an audit record |
 | **Reports** | Strict JSON and a self-contained, script-free HTML report |
 | **Interface** | Drag-and-drop upload, filterable findings, column explorer, light / dark / system themes, keyboard support, responsive layout |
@@ -273,7 +274,8 @@ are echoed in each result as `dataset.parsing`, so a result records how its file
 | POST | `/api/analyze` | `file`, optional `target_column` | `AnalysisResult` JSON |
 | POST | `/api/report` | `file`, optional `target_column`, `format` (`json`/`html`), `include_values` (`true`/`false`, default `false`) | Report as a download |
 | POST | `/api/label-review` | `file`, `target_column` | `LabelReviewResult` JSON |
-| POST | `/api/train-test-overlap` | `train_file`, `test_file`, optional `target_column` | `TrainTestOverlapResult` JSON |
+| POST | `/api/train-test-overlap` | `train_file`, `test_file`, optional `target_column`, `entity_column`, `time_column` | `TrainTestOverlapResult` JSON |
+| POST | `/api/split-advice` | `file`, optional `target_column`, `entity_column`, `time_column` | `SplitAdvice` JSON |
 | POST | `/api/corrections/apply` | `file`, `plan` (JSON: `{"approved": true, "target_column": ..., "steps": [{"operation": ..., "columns": [...]}]}`) | Corrected CSV text and audit record |
 
 ```powershell
@@ -289,8 +291,9 @@ Errors always have the shape `{"error": "<stable_code>", "message": "<safe text>
 (invalid content or options), 500 (unexpected; no details) or 503 (server busy). Example codes:
 `empty_file`, `no_data_rows`, `invalid_encoding`, `malformed_csv`, `empty_header`,
 `duplicate_header`, `too_many_rows`, `too_many_columns`, `file_too_large`, `unsupported_format`,
-`unknown_target_column`, `approval_required`, `invalid_plan`, `invalid_request` (for example an
-unknown delimiter or encoding).
+`unknown_target_column`, `unknown_entity_column`, `unknown_time_column`, `unusable_time_column`,
+`approval_required`, `invalid_plan`, `invalid_request` (for example an unknown delimiter or
+encoding, or the same column chosen for two roles).
 
 <details>
 <summary><b>Analysis result structure</b></summary>
@@ -385,7 +388,24 @@ match `?`). Excel, PDF, archives and binary files are rejected with a message.
   can exist without any of these signals.
 - **Train/test overlap.** Rows are compared on shared columns using 64-bit hashes of parsed values
   (integer and float columns are aligned). A test row whose features match training but whose
-  label does not is reported separately.
+  label does not is reported separately. With an entity column, test rows whose entity value also
+  occurs in training are a potential issue; with a time column, so are test rows dated before the
+  newest training row. Both are medium severity from 5% of test rows, low below that, and both can
+  be intended (predicting for known entities, or a model never used on later data). Entity values
+  are compared exactly, with integer-valued numbers aligned; dates must be ISO 8601 for at least
+  95% of non-missing values in each file.
+- **Split Doctor.** A time column is usable when at least 95% of its non-missing values parse as
+  ISO 8601 (compared in UTC), with at least 10 rows and two distinct dates; it then decides the
+  recommendation (train on earlier rows, test on the latest 20%). Otherwise, grouping by entity is
+  recommended when at least 5% of rows share an entity value and there are at least 10 entities
+  (stratified group split for classification targets). Otherwise classification targets get a
+  stratified split, unless a class has fewer than two examples, and everything else a random one.
+  The "test rows with a known entity" estimate assumes each row joins a 20% holdout independently:
+  an entity with *k* rows contributes *k*·(1 − 0.2^(*k*−1)) rows. Target change over time compares
+  the latest 20% of labeled rows with the rest (each side needs 20 rows) using total variation
+  distance of class shares (mentioned from 0.1) or the standardized mean difference (from 0.2).
+  This is advice: DataSentry cannot know whether the model will predict later periods or unseen
+  entities.
 - **Label review.** Columns that are identifier-like, constant, empty, text, datetime,
   high-cardinality (more than 50 categories) or flagged by the leakage screen are excluded.
   Numeric features are median-imputed and standardized, and categoricals are one-hot encoded,
@@ -434,8 +454,9 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 - CSV only. Delimiter and encoding are chosen by you from a fixed list (comma, semicolon, tab or
   pipe; UTF-8 or Latin-1) and never detected automatically: a semicolon file read as comma-separated
   loads as a single column.
-- Only exact duplicates and exact train/test matches are detected, not near-duplicates or related
-  records (for example the same customer at two dates).
+- Only exact duplicates and exact train/test matches are detected, not near-duplicates. Related
+  records (for example the same customer at two dates) are only found when you select an entity
+  column.
 - Datetime recognition is ISO 8601 only. Booleans are recognized as `true`/`false`, not `yes`/`no`.
 - Heuristics with fixed thresholds can produce false positives and false negatives; every finding
   says what it is based on.
@@ -453,7 +474,6 @@ starting with `=`, `+`, `-` or `@` may be read as formulas by spreadsheet progra
 
 - Reproducible model-impact experiments (for example duplicate contamination across a split, or
   controlled label noise) with a fixed baseline, an isolated test set and multiple seeds.
-- Group-aware and temporal train/test checks using an entity or time column chosen by the user.
 - Near-duplicate detection (normalized text, numeric tolerance).
 - Optional Cleanlab integration for label issues, once its dependency footprint is justified.
 - Frontend unit tests and an automated browser test in CI.

@@ -11,17 +11,24 @@ import pandas as pd
 from app.models.schemas import (
     Category,
     ColumnProfile,
-    DatasetInfo,
+    EntityOverlap,
     Finding,
     FindingKind,
     InferredType,
     LeakageSignal,
     Severity,
     TargetTask,
+    TemporalOrder,
     TrainTestOverlapResult,
 )
-from app.services.loader import DatasetError, LoadedDataset
-from app.services.profiler import fraction
+from app.services.loader import DatasetError, LoadedDataset, describe
+from app.services.profiler import (
+    TIME_MIN_PARSED_FRACTION,
+    display_time,
+    fraction,
+    label_strings,
+    parse_iso_times,
+)
 
 LEAKAGE_MIN_LABELED = 20
 MAPPING_MAX_UNIQUE_FRACTION = 0.5  # the feature must repeat values; unique IDs map trivially
@@ -30,6 +37,7 @@ LAMBDA_THRESHOLD = 0.8
 AUC_THRESHOLD = 0.99
 CORRELATION_THRESHOLD = 0.99
 OVERLAP_EXAMPLES_LIMIT = 10
+OVERLAP_MEDIUM_FRACTION = 0.05  # entity/temporal overlap at or above this share is medium severity
 _MISSING_TOKEN = "\x00missing"  # cannot occur in input: the loader rejects NUL bytes
 
 
@@ -147,19 +155,111 @@ def _row_hashes(train: pd.DataFrame, test: pd.DataFrame, columns: list[str]) -> 
     )
 
 
-def _info(dataset: LoadedDataset) -> DatasetInfo:
-    return DatasetInfo(
-        filename=dataset.filename,
-        size_bytes=dataset.size_bytes,
-        sha256=dataset.sha256,
-        n_rows=len(dataset.frame),
-        n_columns=dataset.frame.shape[1],
-        parsing=dataset.options.info(),
+def _require_shared(train: pd.DataFrame, test: pd.DataFrame, column: str, role: str) -> None:
+    if column not in train.columns or column not in test.columns:
+        raise DatasetError(
+            f"unknown_{role}_column", f"The selected {role} column is not present in both files."
+        )
+
+
+def entity_overlap(train: pd.DataFrame, test: pd.DataFrame, column: str) -> EntityOverlap:
+    """How many test rows belong to an entity (customer, patient, device) seen in training."""
+    _require_shared(train, test, column, "entity")
+    test_values = label_strings(test[column])
+    in_train = test_values.isin(set(label_strings(train[column])))
+    n_seen = int(in_train.sum())
+    return EntityOverlap(
+        column=column,
+        n_test_entities=int(test_values.nunique()),
+        n_shared_entities=int(test_values[in_train].nunique()),
+        n_test_rows_with_seen_entity=n_seen,
+        test_rows_with_seen_entity_fraction=fraction(n_seen, len(test)),
+    )
+
+
+def temporal_order(train: pd.DataFrame, test: pd.DataFrame, column: str) -> TemporalOrder:
+    """How many test rows are dated before the newest training row."""
+    _require_shared(train, test, column, "time")
+    valid = {}
+    for name, frame in (("train", train), ("test", test)):
+        parsed = parse_iso_times(frame[column])
+        ok = parsed.dropna()
+        if not len(ok) or len(ok) / len(parsed) < TIME_MIN_PARSED_FRACTION:
+            raise DatasetError(
+                "unusable_time_column",
+                f"The selected time column could not be read as ISO 8601 dates in the {name} file.",
+            )
+        valid[name] = ok
+    train_max = valid["train"].max()
+    n_before = int((valid["test"] < train_max).sum())
+    return TemporalOrder(
+        column=column,
+        train_max=train_max.isoformat(),
+        test_min=valid["test"].min().isoformat(),
+        n_test_rows_before_train_max=n_before,
+        test_rows_before_train_max_fraction=fraction(n_before, len(test)),
+    )
+
+
+def _entity_finding(entity: EntityOverlap) -> Finding:
+    share = entity.test_rows_with_seen_entity_fraction
+    return Finding(
+        code="train_test_entity_overlap",
+        kind=FindingKind.potential_issue,
+        severity=Severity.medium if share >= OVERLAP_MEDIUM_FRACTION else Severity.low,
+        category=Category.leakage,
+        title="Test rows share an entity with the training data",
+        explanation=f"{entity.n_test_rows_with_seen_entity} test rows ({share:.1%}) have a "
+        f"'{entity.column}' value that also occurs in training ({entity.n_shared_entities} shared "
+        "entities).",
+        why_it_matters="If the model must work for entities it has never seen, test rows from "
+        "known entities partly measure memorization of those entities and overstate performance.",
+        recommendation="If new entities are the use case, re-split so each entity's rows sit on "
+        "one side only (a group split). If predictions are for known entities, this overlap can be "
+        "intended.",
+        limitations="Entity values are compared exactly; the same entity spelled two ways is not "
+        "matched.",
+        columns=[entity.column],
+        evidence={
+            "n_test_rows_with_seen_entity": entity.n_test_rows_with_seen_entity,
+            "n_shared_entities": entity.n_shared_entities,
+            "n_test_entities": entity.n_test_entities,
+        },
+    )
+
+
+def _temporal_finding(temporal: TemporalOrder) -> Finding:
+    share = temporal.test_rows_before_train_max_fraction
+    return Finding(
+        code="train_test_temporal_overlap",
+        kind=FindingKind.potential_issue,
+        severity=Severity.medium if share >= OVERLAP_MEDIUM_FRACTION else Severity.low,
+        category=Category.leakage,
+        title="Test rows are older than the newest training rows",
+        explanation=f"{temporal.n_test_rows_before_train_max} test rows ({share:.1%}) are dated "
+        f"before the latest training row ({display_time(temporal.train_max)}).",
+        why_it_matters="If the model will predict later periods, training on rows newer than the "
+        "evaluation rows lets it learn from the future and overstates performance.",
+        recommendation="For forecasting-style use, cut train and test at a date so every test row "
+        "is later than every training row. If the model is not used on later data, this ordering "
+        "can be fine.",
+        limitations="Dates are read as ISO 8601 only and compared in UTC; rows whose date could "
+        "not be read are not counted.",
+        columns=[temporal.column],
+        evidence={
+            "n_test_rows_before_train_max": temporal.n_test_rows_before_train_max,
+            "train_max": temporal.train_max,
+            "test_min": temporal.test_min,
+        },
     )
 
 
 def train_test_overlap(
-    train: LoadedDataset, test: LoadedDataset, target: str | None
+    train: LoadedDataset,
+    test: LoadedDataset,
+    target: str | None,
+    entity_column: str | None = None,
+    time_column: str | None = None,
 ) -> TrainTestOverlapResult:
     tr, te = train.frame, test.frame
     common = [c for c in tr.columns if c in te.columns]
@@ -171,6 +271,8 @@ def train_test_overlap(
         )
     train_only = [c for c in tr.columns if c not in te.columns]
     test_only = [c for c in te.columns if c not in tr.columns]
+    entity = entity_overlap(tr, te, entity_column) if entity_column is not None else None
+    temporal = temporal_order(tr, te, time_column) if time_column is not None else None
 
     h_train, h_test = _row_hashes(tr, te, common)
     exact = np.isin(h_test, h_train)
@@ -228,6 +330,10 @@ def train_test_overlap(
                 evidence={"n_rows": n_label_conflicts},
             )
         )
+    if entity is not None and entity.n_test_rows_with_seen_entity:
+        findings.append(_entity_finding(entity))
+    if temporal is not None and temporal.n_test_rows_before_train_max:
+        findings.append(_temporal_finding(temporal))
     if train_only or test_only:
         findings.append(
             Finding(
@@ -247,8 +353,8 @@ def train_test_overlap(
         )
 
     return TrainTestOverlapResult(
-        train=_info(train),
-        test=_info(test),
+        train=describe(train),
+        test=describe(test),
         target_column=target,
         common_columns=common,
         train_only_columns=train_only,
@@ -258,13 +364,15 @@ def train_test_overlap(
         n_test_feature_matches=n_feature_matches,
         n_feature_matches_with_different_label=n_label_conflicts,
         example_test_row_indices=[int(i) for i in np.flatnonzero(exact)[:OVERLAP_EXAMPLES_LIMIT]],
+        entity_overlap=entity,
+        temporal_order=temporal,
         findings=findings,
         limitations=[
             "Exact matching only: rounding differences, reformatted text or near-duplicates are "
             "not detected.",
             "Columns are compared by name; a column parsed as numbers in one file and as text in "
             "the other is compared as text and may not match.",
-            "Related-but-different records (for example the same customer at two dates) are not "
-            "detected; use group-aware splitting when entities repeat.",
+            "Related-but-different records (for example the same customer at two dates) are "
+            "only detected when you select an entity column.",
         ],
     )

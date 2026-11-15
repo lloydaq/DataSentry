@@ -24,9 +24,10 @@ from app.models.schemas import (
     HealthResponse,
     LabelReviewResult,
     LimitsInfo,
+    SplitAdvice,
     TrainTestOverlapResult,
 )
-from app.services import corrections, label_review, leakage, report
+from app.services import corrections, label_review, leakage, report, splits
 from app.services.analysis import run_analysis
 from app.services.loader import DatasetError, ParseOptions, load_csv, parse_options
 
@@ -67,9 +68,13 @@ async def _single_upload(request: Request) -> tuple[UploadedFile, dict[str, str]
     return files["file"], fields
 
 
-def _target(fields: dict[str, str]) -> str | None:
-    value = fields.get("target_column", "")
+def _column(fields: dict[str, str], name: str) -> str | None:
+    value = fields.get(name, "")
     return value if value.strip() else None
+
+
+def _target(fields: dict[str, str]) -> str | None:
+    return _column(fields, "target_column")
 
 
 def _options(fields: dict[str, str]) -> ParseOptions:
@@ -165,13 +170,14 @@ async def review_labels(request: Request) -> LabelReviewResult:
 
 @router.post("/train-test-overlap", response_model=TrainTestOverlapResult, responses=_ERRORS)
 async def train_test_overlap(request: Request) -> TrainTestOverlapResult:
-    """Compare two files. Fields: ``train_file``, ``test_file`` and optional ``target_column``.
-    Both files are read with the same parsing options."""
+    """Compare two files. Fields: ``train_file``, ``test_file`` and optional ``target_column``,
+    ``entity_column`` and ``time_column``. Both files are read with the same parsing options."""
     limits = _limits(request)
     files, fields = await read_form(
         request, file_fields=("train_file", "test_file"), max_file_bytes=limits.max_upload_bytes
     )
     target = _target(fields)
+    entity, time = _column(fields, "entity_column"), _column(fields, "time_column")
     options = _options(fields)
     train, test = files["train_file"], files["test_file"]
     return await _run(
@@ -180,6 +186,25 @@ async def train_test_overlap(request: Request) -> TrainTestOverlapResult:
             load_csv(train.data, limits, train.filename, options),
             load_csv(test.data, limits, test.filename, options),
             target,
+            entity,
+            time,
+        ),
+    )
+
+
+@router.post("/split-advice", response_model=SplitAdvice, responses=_ERRORS)
+async def split_advice(request: Request) -> SplitAdvice:
+    """Recommend a train/test split strategy. Fields: ``file`` and optional ``target_column``,
+    ``entity_column`` and ``time_column``."""
+    upload, fields = await _single_upload(request)
+    target = _target(fields)
+    entity, time = _column(fields, "entity_column"), _column(fields, "time_column")
+    options = _options(fields)
+    limits = _limits(request)
+    return await _run(
+        request,
+        lambda: splits.split_advice(
+            load_csv(upload.data, limits, upload.filename, options), target, entity, time
         ),
     )
 

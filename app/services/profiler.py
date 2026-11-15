@@ -42,6 +42,7 @@ CORRELATION_THRESHOLD = 0.99
 CORRELATION_MIN_PAIRS = 10
 CORRELATION_MAX_COLUMNS = 50
 DUPLICATE_EXAMPLES_LIMIT = 10
+TIME_MIN_PARSED_FRACTION = 0.95  # a column used as time needs this share of values to parse
 
 DUPLICATE_SEMANTICS = (
     "A duplicate row is an exact repeat of an earlier row across all columns, compared after "
@@ -217,9 +218,34 @@ def categorical_stats(series: pd.Series, inferred: InferredType) -> CategoricalS
     )
 
 
+def label_strings(series: pd.Series) -> pd.Series:
+    """Non-missing values as exact display strings; integer-valued floats lose their '.0'.
+
+    Used for target labels and entity keys, so 7 and 7.0 compare equal across files."""
+    values = series.dropna()
+    if pd.api.types.is_numeric_dtype(values) and not pd.api.types.is_bool_dtype(values):
+        as_float = values.astype("float64")
+        if np.isfinite(as_float).all() and (np.mod(as_float, 1) == 0).all():
+            return as_float.astype("int64").astype(str)
+    return values.astype(str)
+
+
+def parse_iso_times(series: pd.Series) -> pd.Series:
+    """ISO 8601 timestamps in UTC for the non-missing values (NaT where a value does not parse).
+    Timestamps without a timezone are treated as UTC."""
+    return pd.to_datetime(as_text(series), errors="coerce", format="ISO8601", utc=True)
+
+
+def display_time(iso: str) -> str:
+    """A readable form of an ISO timestamp for sentences: the date alone at midnight UTC."""
+    ts = pd.Timestamp(iso)
+    if ts == ts.normalize():
+        return ts.date().isoformat()
+    return ts.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
 def datetime_stats(series: pd.Series) -> DatetimeStats:
-    text = as_text(series)
-    parsed = pd.to_datetime(text, errors="coerce", format="ISO8601", utc=True)
+    parsed = parse_iso_times(series)
     valid = parsed.dropna()
     return DatetimeStats(
         min=valid.min().isoformat() if len(valid) else None,
