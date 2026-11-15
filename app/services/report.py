@@ -143,7 +143,7 @@ def redact_values(result: AnalysisResult) -> AnalysisResult:
 # --- HTML ------------------------------------------------------------------------------------
 
 _CSS = """
-:root{--fg:#1d2433;--muted:#5b6475;--line:#dde2ea;--bg:#ffffff;--soft:#f5f7fa;--accent:#2f5bd3;
+:root{--fg:#141414;--muted:#5b6475;--line:#dde2ea;--bg:#ffffff;--soft:#f5f7fa;--accent:#00638e;
 --high:#b42318;--medium:#b54708;--low:#175cd3;--info:#475467}
 *{box-sizing:border-box}body{margin:0;font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 color:var(--fg);background:var(--bg)}main{max-width:1040px;margin:0 auto;padding:32px 20px 64px}

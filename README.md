@@ -12,12 +12,12 @@ DataSentry is a local-first dataset diagnostics tool that helps machine learning
 identify data quality issues, investigate potential leakage, review dataset risks, and make
 informed corrections before model training.
 
-![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-2f5bd3?logo=python&logoColor=white)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-00638E?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-backend-0f1b3d?logo=fastapi&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-profiling-0f1b3d?logo=pandas&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-label%20review-0f1b3d?logo=scikitlearn&logoColor=white)
 ![Tested with pytest](https://img.shields.io/badge/tested%20with-pytest-0f1b3d?logo=pytest&logoColor=white)
-![Runs locally](https://img.shields.io/badge/runs-locally%2C%20no%20cloud-2f5bd3)
+![Runs locally](https://img.shields.io/badge/runs-locally%2C%20no%20cloud-00638E)
 
 [Quick start](#quick-start) · [Capabilities](#key-capabilities) · [How it works](#how-it-works) · [API](#api-reference) · [Methodology](#diagnostic-methodology) · [Security](#security-and-privacy)
 
@@ -138,7 +138,7 @@ app/
     label_review.py    Opt-in cross-validated label review (scikit-learn)
     corrections.py     Proposed corrections and approved, audited application
     report.py          JSON report document and escaped HTML rendering
-frontend/              index.html, style.css, app.js, theme.js, kinetic-grid.js (no build step)
+frontend/              index.html, style.css, app.js, theme.js (no build step)
 sample_data/           Synthetic demo datasets (see sample_data/README.md)
 scripts/               generate_sample_data.py (deterministic, seed 42)
 tests/                 pytest suite (unit, API integration, security boundaries, determinism)
@@ -253,7 +253,6 @@ python -m pytest                              # unit, API integration, security 
 python -m compileall -q app tests scripts     # Python syntax
 node --check frontend/app.js                  # JavaScript syntax (optional, requires Node.js)
 node --check frontend/theme.js
-node --check frontend/kinetic-grid.js
 ```
 
 ## API reference
